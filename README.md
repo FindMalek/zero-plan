@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+![hero](github.png)
+
+# FindAccount
+
+FindAccount is a secure password management tool designed to store, retrieve, and manage account credentials and sensitive information efficiently. It provides a user-friendly platform with advanced features like password generation, secure storage, and easy migration from existing TXT files.
+
+## Features
+
+- **Secure Storage:** Encrypted storage for account credentials and sensitive information using Neon Database Provider with PostgreSQL.
+- **Password Generation:** Built-in tool for generating secure passwords.
+- **Account Details Management:** Store account details including usernames, passwords, descriptions, login page links, recovery emails, and creation dates.
+- **Password History:** Track changes made to passwords with timestamps.
+- **Authentication:** Secure authentication using BetterAuth with recommended authentication methods.
+- **User Interface:** Intuitive and mobile-friendly interface built with React, Next.js, Tailwind CSS, and shadcn.
+- **Migration:** Seamless migration from existing TXT files to the new system.
+- **Hosting:** Hosting on Vercel for free.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js and npm installed
+- PostgreSQL database
+- API keys for BetterAuth
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   git clone https://github.com/findmalek/findaccount.git
+   cd findaccount
+   ```
 
-## Learn More
+2. Install dependencies:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   pnpm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Set up environment variables:
+   Create a `.env` file in the root directory and add your database URL and API keys:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```
+   DATABASE_URL=postgresql://your_username:your_password@localhost:5432/findaccount
+   ```
 
-## Deploy on Vercel
+4. Run Prisma migrations:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   pnpm db:migrate
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Start the development server:
+   ```bash
+   pnpm run dev
+   ```
+
+## Usage
+
+1. **Login/Register:** Navigate to the login or register page to create an account or log in.
+2. **Add Accounts:** Use the dashboard to add new accounts with details like website name, website link, email address, and password.
+3. **Search Accounts:** Utilize the search combobox to find accounts by labels, descriptions, or other details.
+4. **Manage Accounts:** View, edit, and delete accounts from the account list.
+5. **Generate Passwords:** Use the built-in password generator to create secure passwords.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License.
+
+## Contact
+
+For any inquiries, please contact [hi@findmalek.com](mailto:hi@findmalek.com).
