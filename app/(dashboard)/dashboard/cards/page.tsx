@@ -1,9 +1,9 @@
 import { ComingSoon } from "@/components/shared/coming-soon"
 
-export default function AccountsPage() {
+export default function CardsPage() {
   return (
     <ComingSoon
-      title="Accounts"
+      title="Cards"
       description="This page is coming soon."
       illustration="construction"
       estimatedTime="2 days"

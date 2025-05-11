@@ -81,7 +81,7 @@ import { cn } from "@/lib/utils"
 export type Icon = LucideIcon
 
 function LogoIcon({ className }: { className?: string }) {
-  return <span className={cn("text-2xl", className)}>🔐</span>
+  return <span className={cn(className)}>🔐</span>
 }
 
 export const Icons = {

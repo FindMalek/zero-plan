@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import {
   WaitlistUserDtoSchema,
   type WaitlistUserDto,
-} from "@/config/schemas/waitlist"
+} from "@/config/schema"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"

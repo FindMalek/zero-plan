@@ -23,7 +23,7 @@ export default function RegisterPage() {
             href="/"
             className={cn(buttonVariants({ variant: "secondary" }))}
           >
-            <Icons.logo className="size-4 grayscale-0" />
+            <Icons.logo className="text-sm grayscale-0" />
             {siteConfig.name}
           </Link>
         </div>
@@ -39,7 +39,9 @@ export default function RegisterPage() {
                 Sign in
               </Link>
             </div>
+            
             <AuthRegisterForm />
+
             <div className="text-muted-foreground mt-4 text-balance text-xs">
               By clicking continue, you agree to our{" "}
               <Link

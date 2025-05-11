@@ -7,7 +7,7 @@ import { z } from "zod"
 import {
   WaitlistUserDtoSchema,
   type WaitlistUserDto,
-} from "@/config/schemas/waitlist"
+} from "@/config/schema"
 
 /**
  * Join waitlist server action

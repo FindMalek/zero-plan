@@ -47,14 +47,14 @@ export function AuthLoginForm({
           email: data.email,
           password: data.password,
           rememberMe: data.rememberMe,
-          callbackURL: "/dashboard/accounts",
+          callbackURL: "/dashboard",
         },
         {
           onRequest: () => {
             setIsLoading(true)
           },
           onSuccess: () => {
-            router.push("/dashboard/accounts")
+            router.push("/dashboard")
           },
           onError: (ctx) => {
             toast(ctx.error.message, {

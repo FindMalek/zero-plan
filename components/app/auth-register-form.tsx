@@ -48,14 +48,14 @@ export function AuthRegisterForm({
           email: data.email,
           password: data.password,
           image: `https://avatar.vercel.sh/${data.email}`,
-          callbackURL: "/dashboard/accounts",
+          callbackURL: "/dashboard",
         },
         {
           onRequest: () => {
             setIsLoading(true)
           },
           onSuccess: () => {
-            router.push("/dashboard/accounts")
+            router.push("/dashboard")
           },
           onError: (ctx) => {
             toast("Something went wrong. Please try again.", {
