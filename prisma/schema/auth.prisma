@@ -10,8 +10,16 @@ model User {
   createdAt DateTime
   updatedAt DateTime
 
-  sessions      Session[]
-  accounts      Account[]
+  sessions Session[]
+  accounts Account[]
+
+  tags                Tag[]
+  cards               Card[]
+  secrets             Secret[]
+  platforms           Platform[]
+  containers          Container[]
+  credentials         Credential[]
+  credentialHistories CredentialHistory[]
 
   @@unique([email])
   @@map("user")
@@ -72,4 +80,19 @@ model Verification {
   expiresAt DateTime
 
   @@map("verification")
+}
+
+model Waitlist {
+  id    String @id @default(uuid())
+  email String @unique
+
+  country   String?
+  city      String?
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("waitlist")
 }

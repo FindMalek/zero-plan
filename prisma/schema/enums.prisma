@@ -1,0 +1,107 @@
+/**
+ * Represents the types of secrets that can be stored.
+ * @property API_KEY - API key.
+ * @property ENV_VARIABLE - Environment variable.
+ * @property DATABASE_URL - Database URL.
+ * @property CLOUD_STORAGE_KEY - Cloud storage key.
+ * @property THIRD_PARTY_API_KEY - Third-party API key.
+ * @property OTHER - Other types of secrets.
+ */
+enum SecretType {
+  API_KEY
+  ENV_VARIABLE
+  DATABASE_URL
+  CLOUD_STORAGE_KEY
+  THIRD_PARTY_API_KEY
+  OTHER
+}
+
+/**
+ * Represents the status of a card.
+ * @property ACTIVE - Card is active.
+ * @property EXPIRED - Card is expired.
+ * @property INACTIVE - Card is inactive.
+ * @property LOST - Card is lost.
+ * @property STOLEN - Card is stolen.
+ */
+enum CardStatus {
+  ACTIVE
+  EXPIRED
+  INACTIVE
+  LOST
+  STOLEN
+}
+
+/**
+ * Represents the status of an account.
+ * @property ACTIVE - Account is active.
+ * @property SUSPENDED - Account is suspended.
+ * @property DELETED - Account is deleted.
+ */
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+/**
+ * Represents the status of a secret.
+ * @property ACTIVE - Secret is active.
+ * @property EXPIRED - Secret is expired.
+ * @property REVOKED - Secret is revoked.
+ */
+enum SecretStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+/**
+ * Represents the providers of cards.
+ * @property VISA - Visa card.
+ * @property MASTERCARD - Mastercard.
+ * @property AMEX - American Express card.
+ * @property DISCOVER - Discover card.
+ * @property DINERS_CLUB - Diners Club card.
+ * @property JCB - JCB card.
+ * @property UNIONPAY - UnionPay card.
+ * @property OTHER - Other types of card providers.
+ */
+enum CardProvider {
+  VISA
+  MASTERCARD
+  AMEX
+  DISCOVER
+  DINERS_CLUB
+  JCB
+  UNIONPAY
+  OTHER
+}
+
+/**
+ * Represents the types of cards.
+ * @property DEBIT - Debit card.
+ * @property CREDIT - Credit card.
+ * @property VIRTUAL - Virtual card.
+ * @property NATIONAL - National card.
+ * @property OTHER - Other types of cards.
+ */
+enum CardType {
+  DEBIT
+  CREDIT
+  VIRTUAL
+  NATIONAL
+  OTHER
+}
+
+/**
+ * Represents the status of a platform.
+ * @property APPROVED - Platform is approved.
+ * @property PENDING - Platform is pending approval.
+ * @property REJECTED - Platform is rejected.
+ */
+enum PlatformStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}

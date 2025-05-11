@@ -1,0 +1,50 @@
+/**
+ * Represents a card stored in the system.
+ * @property id - Unique identifier for the card. Type: String. Generated using cuid().
+ * @property name - Name of the card. Type: String.
+ * @property type - Type of the card. Type: CardType.
+ * @property provider - Provider of the card. Type: CardProvider.
+ * @property number - Number of the card. Type: String.
+ * @property expiryDate - Expiry date of the card. Type: DateTime.
+ * @property cvv - CVV of the card. Type: String.
+ * @property status - Status of the card. Type: CardStatus. Defaults to ACTIVE.
+ * @property description - Description of the card. Type: String. Optional.
+ * @property billingAddress - Billing address associated with the card. Type: String.
+ * @property cardholderName - Name of the cardholder. Type: String.
+ * @property cardholderEmail - Email of the cardholder. Type: String. Optional.
+ * @property createdAt - Timestamp when the card was created. Type: DateTime. Defaults to current time.
+ * @property updatedAt - Timestamp when the card was last updated. Type: DateTime. Updated automatically.
+ * @property user - User who owns the card. Type: User. Relation to User model.
+ * @property userId - ID of the user who owns the card. Type: String.
+ * @property container - Container where the card is stored. Type: Container. Optional. Relation to Container model.
+ * @property containerId - ID of the container where the card is stored. Type: String. Optional.
+ */
+model Card {
+  id String @id @default(cuid())
+
+  name        String
+  description String?
+
+  type     CardType
+  provider CardProvider
+  status   CardStatus   @default(ACTIVE)
+
+  number          String
+  expiryDate      DateTime
+  cvv             String
+  billingAddress  String
+  cardholderName  String
+  cardholderEmail String?
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  containerId String?
+  container   Container? @relation(fields: [containerId], references: [id])
+
+  @@index([userId])
+  @@index([containerId])
+}

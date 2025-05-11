@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "clean": "git clean -fd",
-    "format": "prettier . --write && next lint --fix",
+    "format": "prettier . --write && next lint --fix && pnpm db:format",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:studio": "prisma studio",
@@ -16,7 +16,7 @@
     "db:reset-and-seed": "prisma migrate reset",
     "db:deploy": "prisma migrate deploy",
     "db:format": "prisma format",
-    "db:reset": "prisma db reset",
+    "db:reset": "prisma migrate reset",
     "db:update": "pnpm i --save-dev prisma@latest && pnpm i @prisma/client@latest && pnpm i @prisma/adapter-neon@latest"
   },
   "prisma": {
