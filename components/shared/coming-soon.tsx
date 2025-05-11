@@ -120,7 +120,7 @@ export function ComingSoon({
             {illustration === "sparkles" && (
               <div className="relative">
                 <Sparkles className="text-primary h-32 w-32 animate-pulse" />
-                <div className="absolute top-0 left-0 h-full w-full">
+                <div className="absolute left-0 top-0 h-full w-full">
                   {[...Array(5)].map((_, i) => (
                     <span
                       key={i}

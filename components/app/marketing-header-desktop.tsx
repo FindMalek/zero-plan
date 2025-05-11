@@ -3,8 +3,8 @@ import Link from "next/link"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 
-import { HyperText } from "@/components/fancy/hyper-text"
 import { buttonVariants } from "@/components/ui/button"
+import { HyperText } from "@/components/ui/hyper-text"
 
 export function MarketingHeaderDesktop() {
   return (

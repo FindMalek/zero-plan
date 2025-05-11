@@ -112,7 +112,7 @@ export function AuthLoginForm({
             control={form.control}
             name="rememberMe"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-y-0 space-x-3">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                 <FormControl>
                   <Checkbox
                     checked={field.value}

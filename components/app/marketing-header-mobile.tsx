@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { HyperText } from "@/components/fancy/hyper-text"
+import { HyperText } from "@/components/ui/hyper-text"
 
 export function MarketingHeaderMobile() {
   return (

@@ -1,6 +1,6 @@
-// import "server-only"
+import "server-only"
 
-import { neonConfig, Pool } from "@neondatabase/serverless"
+import { neonConfig } from "@neondatabase/serverless"
 import { PrismaNeon } from "@prisma/adapter-neon"
 import { PrismaClient } from "@prisma/client"
 import ws from "ws"
@@ -15,8 +15,8 @@ if (env.NODE_ENV === "production") {
   // Production: Use Neon serverless adapter
   neonConfig.webSocketConstructor = ws
   neonConfig.poolQueryViaFetch = true
-  const pool = new Pool({ connectionString: env.DATABASE_URL })
-  const adapter = new PrismaNeon(pool)
+  const connectionString = env.DATABASE_URL
+  const adapter = new PrismaNeon({ connectionString })
 
   database = globalForPrisma.prisma || new PrismaClient({ adapter })
 } else {
