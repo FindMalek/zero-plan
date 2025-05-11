@@ -20,7 +20,7 @@
     "db:update": "pnpm i --save-dev prisma@latest && pnpm i @prisma/client@latest && pnpm i @prisma/adapter-neon@latest"
   },
   "prisma": {
-    "schema": "./prisma",
+    "schema": "./prisma/schema/",
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed/index.ts"
   },
   "dependencies": {

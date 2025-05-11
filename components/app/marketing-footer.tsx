@@ -8,7 +8,8 @@ export function MarketingFooter() {
       <div className="flex flex-col items-center justify-between sm:flex-row">
         <Link
           href="https://www.findmalek.com"
-          className="text-foreground-muted hover:text-primary text-sm transition-colors duration-300"
+          target="_blank"
+          className="text-foreground-muted hover:text-primary text-sm underline-offset-4 transition-colors duration-300 hover:underline"
         >
           © {new Date().getFullYear()} Malek Gara-Hellal. All rights reserved.
         </Link>

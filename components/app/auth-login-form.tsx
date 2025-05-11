@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 
 import { loginSchema, type LoginFormData } from "@/config/schema"
 import { signIn } from "@/lib/auth/client"
@@ -22,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/sonner"
 
 export function AuthLoginForm({
   className,
@@ -57,16 +57,22 @@ export function AuthLoginForm({
             router.push("/dashboard")
           },
           onError: (ctx) => {
-            toast.error(ctx.error.message)
+            toast(ctx.error.message, {
+              variant: "destructive",
+            })
           },
         }
       )
 
       if (error) {
-        toast.error(error.message)
+        toast(error.message, {
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast("Something went wrong. Please try again.", {
+        variant: "destructive",
+      })
       console.error(error)
     } finally {
       setIsLoading(false)

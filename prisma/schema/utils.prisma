@@ -12,3 +12,10 @@ model Waitlist {
   @@index([email])
   @@map("waitlist")
 }
+
+model Health {
+  id String @id @default(uuid())
+
+  createdAt DateTime @default(now())
+  @@map("health")
+}

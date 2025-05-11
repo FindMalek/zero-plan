@@ -10,7 +10,7 @@ export function MarketingHeaderDesktop() {
   return (
     <header className="flex w-full items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
       <div className="flex items-center">
-        <h1 className="text-xl font-bold">{siteConfig.name}</h1>
+        <h1 className="text-xl font-bold">🔐 {siteConfig.name}</h1>
       </div>
       <div className="text-secondary-foreground/70 hidden items-center justify-center text-xs md:flex">
         <HyperText
@@ -35,7 +35,7 @@ export function MarketingHeaderDesktop() {
       <div className="flex items-center">
         <Link
           href="/login"
-          className={cn(buttonVariants({ variant: "default", size: "sm" }))}
+          className={cn(buttonVariants({ variant: "default" }))}
         >
           Login
         </Link>

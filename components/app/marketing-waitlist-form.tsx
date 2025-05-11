@@ -54,11 +54,11 @@ export function MarketingWaitlistForm() {
   }
 
   return (
-    <div className="w-full space-y-4 lg:w-1/2">
+    <div className="w-full space-y-4">
       <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:whitespace-nowrap lg:text-4xl xl:text-5xl">
         Simple password management.
       </h2>
-      <p className="text-lg text-gray-600 dark:text-gray-400">
+      <p className="text-secondary-foreground/70 text-lg">
         Manage your passwords and sensitive information securely and
         effortlessly.
       </p>
@@ -77,7 +77,6 @@ export function MarketingWaitlistForm() {
                   <Input
                     type="email"
                     placeholder="Your email"
-                    className="bg-background dark:bg-gray-800"
                     disabled={isLoading}
                     {...field}
                   />
@@ -90,12 +89,10 @@ export function MarketingWaitlistForm() {
             type="submit"
             className="w-full sm:w-auto"
             disabled={isLoading}
+            size="lg"
           >
-            {isLoading ? (
-              <Icons.spinner className="size-4 animate-spin" />
-            ) : (
-              "Join Waitlist"
-            )}
+            {isLoading && <Icons.spinner className="size-4 animate-spin" />}{" "}
+            Join Waitlist
           </Button>
         </form>
       </Form>

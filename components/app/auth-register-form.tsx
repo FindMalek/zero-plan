@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { toast } from "sonner"
 
 import { signUpSchema, type SignUpFormData } from "@/config/schema"
 import { signUp } from "@/lib/auth/client"
@@ -21,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/sonner"
 
 export function AuthRegisterForm({
   className,
@@ -58,16 +58,28 @@ export function AuthRegisterForm({
             router.push("/dashboard")
           },
           onError: (ctx) => {
-            toast.error(ctx.error.message)
+            toast("Something went wrong. Please try again.", {
+              variant: "destructive",
+              description:
+                ctx.error instanceof Error
+                  ? ctx.error.message
+                  : "Unknown error",
+            })
           },
         }
       )
 
       if (error) {
-        toast.error(error.message)
+        toast("Something went wrong. Please try again.", {
+          variant: "destructive",
+          description: error.message,
+        })
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast("Something went wrong. Please try again.", {
+        variant: "destructive",
+        description: error instanceof Error ? error.message : "Unknown error",
+      })
       console.error(error)
     } finally {
       setIsLoading(false)
