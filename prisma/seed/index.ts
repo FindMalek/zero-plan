@@ -1,12 +1,12 @@
 import { PrismaClient } from "@prisma/client"
 
-import { seedUsers } from "./users"
-import { seedPlatforms } from "./platforms"
-import { seedContainers } from "./containers"
-import { seedTags } from "./tags"
-import { seedCredentials } from "./credentials"
 import { seedCards } from "./cards"
+import { seedContainers } from "./containers"
+import { seedCredentials } from "./credentials"
+import { seedPlatforms } from "./platforms"
 import { seedSecrets } from "./secrets"
+import { seedTags } from "./tags"
+import { seedUsers } from "./users"
 
 const prisma = new PrismaClient()
 
@@ -21,7 +21,7 @@ async function main() {
   await seedCredentials(prisma)
   await seedCards(prisma)
   await seedSecrets(prisma)
-  
+
   console.log("✅ Database seeding completed")
 }
 

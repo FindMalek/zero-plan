@@ -48,4 +48,4 @@ async function seedContainers(prisma: PrismaClient) {
   console.log("✅ Containers seeded successfully")
 }
 
-export { seedContainers } 
+export { seedContainers }

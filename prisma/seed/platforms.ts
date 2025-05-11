@@ -1,4 +1,4 @@
-import { PrismaClient, PlatformStatus } from "@prisma/client"
+import { PlatformStatus, PrismaClient } from "@prisma/client"
 
 async function seedPlatforms(prisma: PrismaClient) {
   console.log("🌱 Seeding platforms...")
@@ -45,4 +45,4 @@ async function seedPlatforms(prisma: PrismaClient) {
   console.log("✅ Platforms seeded successfully")
 }
 
-export { seedPlatforms } 
+export { seedPlatforms }

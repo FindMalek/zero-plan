@@ -58,4 +58,4 @@ async function seedTags(prisma: PrismaClient) {
   console.log("✅ Tags seeded successfully")
 }
 
-export { seedTags } 
+export { seedTags }

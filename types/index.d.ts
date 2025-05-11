@@ -2,6 +2,8 @@ import type { Icon } from "lucide-react"
 
 import { Icons } from "@/components/shared/icons"
 
+export * from "./dashboard"
+
 export type NavItem = {
   title: string
   href: string

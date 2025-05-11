@@ -1,4 +1,5 @@
-import { PrismaClient, AccountStatus } from "@prisma/client"
+import { AccountStatus, PrismaClient } from "@prisma/client"
+
 import { saltAndHashPassword } from "./users"
 
 async function seedCredentials(prisma: PrismaClient) {
@@ -16,7 +17,12 @@ async function seedCredentials(prisma: PrismaClient) {
   const microsoftPlatform = platforms.find((p) => p.name === "Microsoft")
 
   // Ensure platforms are found
-  if (!googlePlatform || !githubPlatform || !awsPlatform || !microsoftPlatform) {
+  if (
+    !googlePlatform ||
+    !githubPlatform ||
+    !awsPlatform ||
+    !microsoftPlatform
+  ) {
     console.error("❌ Required platforms not found")
     return
   }
@@ -30,7 +36,7 @@ async function seedCredentials(prisma: PrismaClient) {
   const googlePasswordPromise = saltAndHashPassword("GooglePass123!")
   const githubPasswordPromise = saltAndHashPassword("GitHubPass123!")
   const awsPasswordPromise = saltAndHashPassword("AWSPass123!")
-  
+
   // Wait for all password hashes to complete
   const [googlePassword, githubPassword, awsPassword] = await Promise.all([
     googlePasswordPromise,
@@ -54,9 +60,7 @@ async function seedCredentials(prisma: PrismaClient) {
     const personalTag = tags.find(
       (t) => t.userId === user.id && t.name === "Personal"
     )
-    const workTag = tags.find(
-      (t) => t.userId === user.id && t.name === "Work"
-    )
+    const workTag = tags.find((t) => t.userId === user.id && t.name === "Work")
 
     // Google credential
     const googleCredId = `credential_google_${user.id}`
@@ -160,7 +164,7 @@ async function seedCredentials(prisma: PrismaClient) {
       where: { id: connection.credentialId },
       data: {
         tags: {
-          connect: connection.tagIds.map(id => ({ id })),
+          connect: connection.tagIds.map((id) => ({ id })),
         },
       },
     })
@@ -169,4 +173,4 @@ async function seedCredentials(prisma: PrismaClient) {
   console.log("✅ Credentials seeded successfully")
 }
 
-export { seedCredentials } 
+export { seedCredentials }

@@ -1,4 +1,4 @@
-import { PrismaClient, SecretType, SecretStatus } from "@prisma/client"
+import { PrismaClient, SecretStatus, SecretType } from "@prisma/client"
 
 async function seedSecrets(prisma: PrismaClient) {
   console.log("🌱 Seeding secrets...")
@@ -81,4 +81,4 @@ async function seedSecrets(prisma: PrismaClient) {
   console.log("✅ Secrets seeded successfully")
 }
 
-export { seedSecrets } 
+export { seedSecrets }

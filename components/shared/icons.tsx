@@ -35,6 +35,7 @@ import {
   HospitalIcon,
   Image as ImageIcon,
   Inbox,
+  KeyIcon,
   Laptop,
   LayoutDashboardIcon,
   LineChartIcon,
@@ -175,4 +176,5 @@ export const Icons = {
   dashboard: LayoutDashboardIcon,
   lifecycle: ListIcon,
   arrowUpCircle: ArrowUpCircleIcon,
+  key: KeyIcon,
 }
