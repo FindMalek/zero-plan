@@ -21,14 +21,14 @@ export function MarketingHeaderDesktop() {
         >
           CURRENTLY IN PRIVATE BETA - BUILT BY
         </HyperText>{" "}
-        <Link href="https://www.undrstnd.dev">
+        <Link href="https://www.findmalek.com">
           <HyperText
             duration={500}
             delay={4}
             as="div"
             className="text-primary ml-1 hidden text-xs md:block"
           >
-            UNDRSTND LABS
+            MALEK GARA-HELLAL
           </HyperText>
         </Link>
       </div>

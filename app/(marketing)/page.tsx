@@ -23,12 +23,12 @@ export default function Home() {
 
         <main className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl">
-            <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16">
+            <div className="flex flex-col items-center gap-8 space-x-2 lg:flex-row lg:gap-16">
               <MarketingWaitlistForm />
 
               <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:w-1/2">
-                <StatCard value="1" label="Business Managed" />
-                <StatCard value="100 HRS+" label="Time Saved Monthly" />
+                <StatCard value="1" label="USERS SIGNED UP" />
+                <StatCard value="100 HRS+" label="PASSWORD MANAGED" />
               </div>
             </div>
           </div>

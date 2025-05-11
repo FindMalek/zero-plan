@@ -14,14 +14,14 @@ export function MarketingHeaderMobile() {
         >
           CURRENTLY IN PRIVATE BETA - BUILT BY
         </HyperText>
-        <Link href="https://www.undrstnd.dev">
+        <Link href="https://www.findmalek.com">
           <HyperText
             duration={500}
             delay={4}
             as="div"
             className="text-primary text-xs"
           >
-            UNDRSTND LABS
+            MALEK GARA-HELLAL
           </HyperText>
         </Link>
       </div>

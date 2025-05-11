@@ -1,23 +1,104 @@
+"use client"
+
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import {
+  WaitlistUserDtoSchema,
+  type WaitlistUserDto,
+} from "@/config/schemas/waitlist"
+
+import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
+import { joinWaitlist } from "@/actions/waitlist"
+
 export function MarketingWaitlistForm() {
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Initialize form with React Hook Form and Zod resolver
+  const form = useForm<WaitlistUserDto>({
+    resolver: zodResolver(WaitlistUserDtoSchema),
+    defaultValues: {
+      email: "",
+    },
+  })
+
+  async function onSubmit(values: WaitlistUserDto) {
+    setIsLoading(true)
+
+    try {
+      const result = await joinWaitlist(values)
+
+      if (result.success) {
+        toast.success("You've been added to our waitlist.")
+        form.reset()
+      } else {
+        toast.error(result.error || "Something went wrong")
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="w-full space-y-4 lg:w-1/2">
       <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:whitespace-nowrap lg:text-4xl xl:text-5xl">
-        AI Driven Lead Management
+        Simple password management.
       </h2>
       <p className="text-lg text-gray-600 dark:text-gray-400">
-        Manage your leads without the enterprise bloat.
+        Manage your passwords and sensitive information securely and
+        effortlessly.
       </p>
-      <div className="flex flex-col gap-2 pt-4 sm:flex-row">
-        <Input
-          type="email"
-          placeholder="Your email"
-          className="bg-background w-full sm:w-auto sm:flex-1 dark:bg-gray-800"
-        />
-        <Button className="w-full sm:w-auto">Join Waitlist</Button>
-      </div>
+
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-2 pt-4 sm:flex-row"
+        >
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="w-full sm:w-auto sm:flex-1">
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Your email"
+                    className="bg-background dark:bg-gray-800"
+                    disabled={isLoading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            className="w-full sm:w-auto"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Icons.spinner className="size-4 animate-spin" />
+            ) : (
+              "Join Waitlist"
+            )}
+          </Button>
+        </form>
+      </Form>
     </div>
   )
 }
