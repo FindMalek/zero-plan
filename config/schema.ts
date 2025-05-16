@@ -100,61 +100,6 @@ export const CardRo = z.object({
 export type CardDto = z.infer<typeof CardDto>
 export type CardRo = z.infer<typeof CardRo>
 
-// Credential schemas
-export const CredentialDto = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-  status: z.nativeEnum(AccountStatus).optional().default(AccountStatus.ACTIVE),
-  description: z.string().optional(),
-  loginUrl: z.string().url().optional(),
-  platformId: z.string(),
-  containerId: z.string().optional(),
-})
-
-export const CredentialRo = z.object({
-  id: z.string(),
-  username: z.string(),
-  password: z.string(),
-  status: z.nativeEnum(AccountStatus),
-  description: z.string().optional(),
-  loginUrl: z.string().optional(),
-  lastCopied: z.date().optional(),
-  lastViewed: z.date().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  platformId: z.string(),
-  userId: z.string(),
-  containerId: z.string().optional(),
-})
-
-export type CredentialDto = z.infer<typeof CredentialDto>
-export type CredentialRo = z.infer<typeof CredentialRo>
-
-// CredentialMetadata schemas
-export const CredentialMetadataDto = z.object({
-  recoveryEmail: z.string().email().optional(),
-  accountId: z.string().optional(),
-  iban: z.string().optional(),
-  bankName: z.string().optional(),
-  otherInfo: z.string().optional(),
-  has2FA: z.boolean().optional().default(false),
-  credentialId: z.string(),
-})
-
-export const CredentialMetadataRo = z.object({
-  id: z.string(),
-  recoveryEmail: z.string().optional(),
-  accountId: z.string().optional(),
-  iban: z.string().optional(),
-  bankName: z.string().optional(),
-  otherInfo: z.string().optional(),
-  has2FA: z.boolean(),
-  credentialId: z.string(),
-})
-
-export type CredentialMetadataDto = z.infer<typeof CredentialMetadataDto>
-export type CredentialMetadataRo = z.infer<typeof CredentialMetadataRo>
-
 // Secret schemas
 export const SecretDto = z.object({
   name: z.string().min(1, "Name is required"),
