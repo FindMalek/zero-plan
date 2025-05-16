@@ -1,6 +1,5 @@
 "use server"
 
-import { headers } from "next/headers"
 import { CredentialMetadataEntity } from "@/entities/credential"
 import { database } from "@/prisma/client"
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/schemas/credential"
 import { z } from "zod"
 
-import { auth } from "@/lib/auth/server"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create credential metadata
@@ -24,16 +23,7 @@ export async function createCredentialMetadata(
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = CredentialMetadataDto.parse(data)
@@ -82,6 +72,12 @@ export async function createCredentialMetadata(
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -107,16 +103,7 @@ export async function getCredentialMetadata(credentialId: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Check if credential exists and belongs to the user
     const credential = await database.credential.findFirst({
@@ -150,6 +137,12 @@ export async function getCredentialMetadata(credentialId: string): Promise<{
       metadata: CredentialMetadataEntity.getSimpleRo(metadata),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get credential metadata error:", error)
     return {
       success: false,
@@ -171,16 +164,7 @@ export async function updateCredentialMetadata(
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Get metadata
     const existingMetadata = await database.credentialMetadata.findUnique({
@@ -222,6 +206,12 @@ export async function updateCredentialMetadata(
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -246,16 +236,7 @@ export async function deleteCredentialMetadata(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Get metadata
     const existingMetadata = await database.credentialMetadata.findUnique({
@@ -287,6 +268,12 @@ export async function deleteCredentialMetadata(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Delete credential metadata error:", error)
     return {
       success: false,

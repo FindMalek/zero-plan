@@ -12,9 +12,9 @@ The format would be:
 - [ ] Implement oRPC instead of Next.js Server Actions || Low
       This would let us scale into using API calls for external usage of the app, to be used in other apps.
 
-- [ ] Change return types of the Server Actions || High
+- [x] Change return types of the Server Actions || High
       Currently we use ZOD.parse() in the server actions to validate the data.
       Which is good, but I would like to use `entity.ts` and `query.ts` to validate the data - Each Prisma model would have a corresponding entity and query.
 
-- [ ] Create a `verify` function for the `better-auth` library || High
+- [x] Create a `verify` function for the `better-auth` library || High
       This would be used to verify the user session in the server actions. We could use this in the client as well.

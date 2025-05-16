@@ -12,6 +12,7 @@ import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { auth } from "@/lib/auth/server"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new platform
@@ -23,16 +24,7 @@ export async function createPlatform(data: PlatformDtoType): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = PlatformDto.parse(data)
@@ -57,6 +49,12 @@ export async function createPlatform(data: PlatformDtoType): Promise<{
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -119,16 +117,7 @@ export async function updatePlatform(
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure platform exists
     const existingPlatform = await database.platform.findUnique({
@@ -175,6 +164,12 @@ export async function updatePlatform(
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -199,16 +194,7 @@ export async function deletePlatform(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure platform exists
     const existingPlatform = await database.platform.findUnique({
@@ -256,6 +242,12 @@ export async function deletePlatform(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Platform deletion error:", error)
     return {
       success: false,

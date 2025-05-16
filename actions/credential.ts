@@ -1,6 +1,5 @@
 "use server"
 
-import { headers } from "next/headers"
 import { CredentialEntity } from "@/entities/credential"
 import { database } from "@/prisma/client"
 import {
@@ -11,7 +10,7 @@ import {
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { auth } from "@/lib/auth/server"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new credential
@@ -23,16 +22,7 @@ export async function createCredential(data: CredentialDtoType): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = CredentialDto.parse(data)
@@ -68,6 +58,12 @@ export async function createCredential(data: CredentialDtoType): Promise<{
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -93,16 +89,7 @@ export async function getCredentialById(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const credential = await database.credential.findFirst({
       where: {
@@ -129,6 +116,12 @@ export async function getCredentialById(id: string): Promise<{
       credential: CredentialEntity.getSimpleRo(credential),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get credential error:", error)
     return {
       success: false,
@@ -150,16 +143,7 @@ export async function updateCredential(
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure credential exists and belongs to user
     const existingCredential = await database.credential.findFirst({
@@ -209,6 +193,12 @@ export async function updateCredential(
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -233,16 +223,7 @@ export async function deleteCredential(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure credential exists and belongs to user
     const existingCredential = await database.credential.findFirst({
@@ -268,6 +249,12 @@ export async function deleteCredential(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Credential deletion error:", error)
     return {
       success: false,
@@ -291,16 +278,7 @@ export async function listCredentials(
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const skip = (page - 1) * limit
 
@@ -337,6 +315,12 @@ export async function listCredentials(
       total,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("List credentials error:", error)
     return {
       success: false,
@@ -353,16 +337,7 @@ export async function copyCredentialPassword(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure credential exists and belongs to user
     const existingCredential = await database.credential.findFirst({
@@ -389,6 +364,12 @@ export async function copyCredentialPassword(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Copy credential password error:", error)
     return {
       success: false,

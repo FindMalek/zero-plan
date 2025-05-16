@@ -1,6 +1,5 @@
 "use server"
 
-import { headers } from "next/headers"
 import { ContainerEntity } from "@/entities/container"
 import { database } from "@/prisma/client"
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/schemas/container"
 import { z } from "zod"
 
-import { auth } from "@/lib/auth/server"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new container
@@ -22,16 +21,7 @@ export async function createContainer(data: ContainerDtoType): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = ContainerDto.parse(data)
@@ -56,6 +46,12 @@ export async function createContainer(data: ContainerDtoType): Promise<{
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -81,16 +77,7 @@ export async function getContainerById(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const container = await database.container.findFirst({
       where: {
@@ -111,6 +98,12 @@ export async function getContainerById(id: string): Promise<{
       container: ContainerEntity.getSimpleRo(container),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get container error:", error)
     return {
       success: false,
@@ -132,16 +125,7 @@ export async function updateContainer(
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
@@ -180,6 +164,12 @@ export async function updateContainer(
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -204,16 +194,7 @@ export async function deleteContainer(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
@@ -253,6 +234,12 @@ export async function deleteContainer(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Container deletion error:", error)
     return {
       success: false,
@@ -274,16 +261,7 @@ export async function listContainers(
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const skip = (page - 1) * limit
 
@@ -307,6 +285,12 @@ export async function listContainers(
       total,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("List containers error:", error)
     return {
       success: false,
@@ -329,16 +313,7 @@ export async function getContainerStats(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
@@ -374,6 +349,12 @@ export async function getContainerStats(id: string): Promise<{
       },
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get container stats error:", error)
     return {
       success: false,

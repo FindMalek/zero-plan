@@ -1,6 +1,5 @@
 "use server"
 
-import { headers } from "next/headers"
 import { SecretEntity } from "@/entities/secret"
 import { database } from "@/prisma/client"
 import {
@@ -11,7 +10,7 @@ import {
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { auth } from "@/lib/auth/server"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new secret
@@ -23,16 +22,7 @@ export async function createSecret(data: SecretDtoType): Promise<{
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = SecretDto.parse(data)
@@ -75,6 +65,12 @@ export async function createSecret(data: SecretDtoType): Promise<{
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -100,16 +96,7 @@ export async function getSecretById(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const secret = await database.secret.findFirst({
       where: {
@@ -130,6 +117,12 @@ export async function getSecretById(id: string): Promise<{
       secret: SecretEntity.getSimpleRo(secret),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get secret error:", error)
     return {
       success: false,
@@ -151,16 +144,7 @@ export async function updateSecret(
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure secret exists and belongs to user
     const existingSecret = await database.secret.findFirst({
@@ -202,6 +186,12 @@ export async function updateSecret(
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -226,16 +216,7 @@ export async function deleteSecret(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure secret exists and belongs to user
     const existingSecret = await database.secret.findFirst({
@@ -261,6 +242,12 @@ export async function deleteSecret(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Secret deletion error:", error)
     return {
       success: false,
@@ -284,16 +271,7 @@ export async function listSecrets(
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const skip = (page - 1) * limit
 
@@ -328,6 +306,12 @@ export async function listSecrets(
       total,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("List secrets error:", error)
     return {
       success: false,

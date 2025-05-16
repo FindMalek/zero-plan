@@ -1,12 +1,11 @@
 "use server"
 
-import { headers } from "next/headers"
 import { database } from "@/prisma/client"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
 import { UserDto, UserRo, type UserDto as UserDtoType } from "@/config/schema"
-import { auth } from "@/lib/auth/server"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new user
@@ -108,16 +107,7 @@ export async function getCurrentUser(): Promise<{
   error?: string
 }> {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const user = await database.user.findUnique({
       where: { id: session.user.id },
@@ -135,6 +125,12 @@ export async function getCurrentUser(): Promise<{
       user: UserRo.parse(user),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get current user error:", error)
     return {
       success: false,
