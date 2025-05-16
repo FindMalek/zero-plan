@@ -1,17 +1,23 @@
 "use server"
 
+import { headers } from "next/headers"
+import { ContainerEntity } from "@/entities/container"
 import { database } from "@/prisma/client"
+import {
+  ContainerDto,
+  ContainerSimpleRo,
+  type ContainerDto as ContainerDtoType,
+} from "@/schemas/container"
 import { z } from "zod"
 
-import { ContainerDto, ContainerRo, type ContainerDto as ContainerDtoType } from "@/config/schema"
 import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
+
 /**
  * Create a new container
  */
 export async function createContainer(data: ContainerDtoType): Promise<{
   success: boolean
-  container?: ContainerRo
+  container?: ContainerSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -44,7 +50,7 @@ export async function createContainer(data: ContainerDtoType): Promise<{
 
       return {
         success: true,
-        container: ContainerRo.parse(container),
+        container: ContainerEntity.getSimpleRo(container),
       }
     } catch (error) {
       throw error
@@ -71,7 +77,7 @@ export async function createContainer(data: ContainerDtoType): Promise<{
  */
 export async function getContainerById(id: string): Promise<{
   success: boolean
-  container?: ContainerRo
+  container?: ContainerSimpleRo
   error?: string
 }> {
   try {
@@ -87,7 +93,7 @@ export async function getContainerById(id: string): Promise<{
     }
 
     const container = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -102,7 +108,7 @@ export async function getContainerById(id: string): Promise<{
 
     return {
       success: true,
-      container: ContainerRo.parse(container),
+      container: ContainerEntity.getSimpleRo(container),
     }
   } catch (error) {
     console.error("Get container error:", error)
@@ -116,9 +122,12 @@ export async function getContainerById(id: string): Promise<{
 /**
  * Update a container
  */
-export async function updateContainer(id: string, data: Partial<ContainerDtoType>): Promise<{
+export async function updateContainer(
+  id: string,
+  data: Partial<ContainerDtoType>
+): Promise<{
   success: boolean
-  container?: ContainerRo
+  container?: ContainerSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -136,7 +145,7 @@ export async function updateContainer(id: string, data: Partial<ContainerDtoType
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -165,7 +174,7 @@ export async function updateContainer(id: string, data: Partial<ContainerDtoType
 
       return {
         success: true,
-        container: ContainerRo.parse(updatedContainer),
+        container: ContainerEntity.getSimpleRo(updatedContainer),
       }
     } catch (error) {
       throw error
@@ -208,7 +217,7 @@ export async function deleteContainer(id: string): Promise<{
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -255,9 +264,12 @@ export async function deleteContainer(id: string): Promise<{
 /**
  * List containers with pagination
  */
-export async function listContainers(page = 1, limit = 10): Promise<{
+export async function listContainers(
+  page = 1,
+  limit = 10
+): Promise<{
   success: boolean
-  containers?: ContainerRo[]
+  containers?: ContainerSimpleRo[]
   total?: number
   error?: string
 }> {
@@ -289,7 +301,9 @@ export async function listContainers(page = 1, limit = 10): Promise<{
 
     return {
       success: true,
-      containers: containers.map((container) => ContainerRo.parse(container)),
+      containers: containers.map((container) =>
+        ContainerEntity.getSimpleRo(container)
+      ),
       total,
     }
   } catch (error) {
@@ -328,7 +342,7 @@ export async function getContainerStats(id: string): Promise<{
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -342,12 +356,13 @@ export async function getContainerStats(id: string): Promise<{
     }
 
     // Get statistics
-    const [credentialCount, secretCount, cardCount, tagCount] = await Promise.all([
-      database.credential.count({ where: { containerId: id } }),
-      database.secret.count({ where: { containerId: id } }),
-      database.card.count({ where: { containerId: id } }),
-      database.tag.count({ where: { containerId: id } }),
-    ])
+    const [credentialCount, secretCount, cardCount, tagCount] =
+      await Promise.all([
+        database.credential.count({ where: { containerId: id } }),
+        database.secret.count({ where: { containerId: id } }),
+        database.card.count({ where: { containerId: id } }),
+        database.tag.count({ where: { containerId: id } }),
+      ])
 
     return {
       success: true,
@@ -365,4 +380,4 @@ export async function getContainerStats(id: string): Promise<{
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

@@ -14,7 +14,7 @@ export class ContainerEntity {
 
       updatedAt: entity.updatedAt,
       createdAt: entity.createdAt,
-      
+
       userId: entity.userId,
     }
   }

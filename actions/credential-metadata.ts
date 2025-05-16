@@ -1,22 +1,25 @@
 "use server"
 
+import { headers } from "next/headers"
+import { CredentialMetadataEntity } from "@/entities/credential"
 import { database } from "@/prisma/client"
+import {
+  CredentialMetadataDto,
+  CredentialMetadataSimpleRo,
+  type CredentialMetadataDto as CredentialMetadataDtoType,
+} from "@/schemas/credential"
 import { z } from "zod"
 
-import { 
-  CredentialMetadataDto, 
-  CredentialMetadataRo, 
-  type CredentialMetadataDto as CredentialMetadataDtoType 
-} from "@/config/schema"
 import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
 
 /**
  * Create credential metadata
  */
-export async function createCredentialMetadata(data: CredentialMetadataDtoType): Promise<{
+export async function createCredentialMetadata(
+  data: CredentialMetadataDtoType
+): Promise<{
   success: boolean
-  metadata?: CredentialMetadataRo
+  metadata?: CredentialMetadataSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -38,7 +41,7 @@ export async function createCredentialMetadata(data: CredentialMetadataDtoType):
     try {
       // Check if credential exists and belongs to the user
       const credential = await database.credential.findFirst({
-        where: { 
+        where: {
           id: validatedData.credentialId,
           userId: session.user.id,
         },
@@ -73,7 +76,7 @@ export async function createCredentialMetadata(data: CredentialMetadataDtoType):
 
       return {
         success: true,
-        metadata: CredentialMetadataRo.parse(metadata),
+        metadata: CredentialMetadataEntity.getSimpleRo(metadata),
       }
     } catch (error) {
       throw error
@@ -100,7 +103,7 @@ export async function createCredentialMetadata(data: CredentialMetadataDtoType):
  */
 export async function getCredentialMetadata(credentialId: string): Promise<{
   success: boolean
-  metadata?: CredentialMetadataRo
+  metadata?: CredentialMetadataSimpleRo
   error?: string
 }> {
   try {
@@ -117,7 +120,7 @@ export async function getCredentialMetadata(credentialId: string): Promise<{
 
     // Check if credential exists and belongs to the user
     const credential = await database.credential.findFirst({
-      where: { 
+      where: {
         id: credentialId,
         userId: session.user.id,
       },
@@ -144,7 +147,7 @@ export async function getCredentialMetadata(credentialId: string): Promise<{
 
     return {
       success: true,
-      metadata: CredentialMetadataRo.parse(metadata),
+      metadata: CredentialMetadataEntity.getSimpleRo(metadata),
     }
   } catch (error) {
     console.error("Get credential metadata error:", error)
@@ -159,11 +162,11 @@ export async function getCredentialMetadata(credentialId: string): Promise<{
  * Update credential metadata
  */
 export async function updateCredentialMetadata(
-  id: string, 
+  id: string,
   data: Partial<CredentialMetadataDtoType>
 ): Promise<{
   success: boolean
-  metadata?: CredentialMetadataRo
+  metadata?: CredentialMetadataSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -213,7 +216,7 @@ export async function updateCredentialMetadata(
 
       return {
         success: true,
-        metadata: CredentialMetadataRo.parse(updatedMetadata),
+        metadata: CredentialMetadataEntity.getSimpleRo(updatedMetadata),
       }
     } catch (error) {
       throw error
@@ -290,4 +293,4 @@ export async function deleteCredentialMetadata(id: string): Promise<{
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

@@ -1,11 +1,16 @@
 "use server"
 
 import { headers } from "next/headers"
+import { CardEntity } from "@/entities/card"
 import { database } from "@/prisma/client"
+import {
+  CardDto,
+  CardSimpleRo,
+  type CardDto as CardDtoType,
+} from "@/schemas/card"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { CardDto, CardRo, type CardDto as CardDtoType } from "@/config/schema"
 import { auth } from "@/lib/auth/server"
 
 /**
@@ -13,7 +18,7 @@ import { auth } from "@/lib/auth/server"
  */
 export async function createCard(data: CardDtoType): Promise<{
   success: boolean
-  card?: CardRo
+  card?: CardSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -49,7 +54,7 @@ export async function createCard(data: CardDtoType): Promise<{
 
       return {
         success: true,
-        card: CardRo.parse(card),
+        card: CardEntity.getSimpleRo(card),
       }
     } catch (error) {
       throw error
@@ -76,7 +81,7 @@ export async function createCard(data: CardDtoType): Promise<{
  */
 export async function getCardById(id: string): Promise<{
   success: boolean
-  card?: CardRo
+  card?: CardSimpleRo
   error?: string
 }> {
   try {
@@ -107,7 +112,7 @@ export async function getCardById(id: string): Promise<{
 
     return {
       success: true,
-      card: CardRo.parse(card),
+      card: CardEntity.getSimpleRo(card),
     }
   } catch (error) {
     console.error("Get card error:", error)
@@ -126,7 +131,7 @@ export async function updateCard(
   data: Partial<CardDtoType>
 ): Promise<{
   success: boolean
-  card?: CardRo
+  card?: CardSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -176,7 +181,7 @@ export async function updateCard(
 
       return {
         success: true,
-        card: CardRo.parse(updatedCard),
+        card: CardEntity.getSimpleRo(updatedCard),
       }
     } catch (error) {
       throw error
@@ -258,7 +263,7 @@ export async function listCards(
   containerId?: string
 ): Promise<{
   success: boolean
-  cards?: CardRo[]
+  cards?: CardSimpleRo[]
   total?: number
   error?: string
 }> {
@@ -299,7 +304,7 @@ export async function listCards(
 
     return {
       success: true,
-      cards: cards.map((card) => CardRo.parse(card)),
+      cards: cards.map((card) => CardEntity.getSimpleRo(card)),
       total,
     }
   } catch (error) {

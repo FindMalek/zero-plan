@@ -1,19 +1,24 @@
 "use server"
 
+import { headers } from "next/headers"
+import { SecretEntity } from "@/entities/secret"
 import { database } from "@/prisma/client"
+import {
+  SecretDto,
+  SecretSimpleRo,
+  type SecretDto as SecretDtoType,
+} from "@/schemas/secret"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { SecretDto, SecretRo, type SecretDto as SecretDtoType } from "@/config/schema"
 import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
 
 /**
  * Create a new secret
  */
 export async function createSecret(data: SecretDtoType): Promise<{
   success: boolean
-  secret?: SecretRo
+  secret?: SecretSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -64,7 +69,7 @@ export async function createSecret(data: SecretDtoType): Promise<{
 
       return {
         success: true,
-        secret: SecretRo.parse(secret),
+        secret: SecretEntity.getSimpleRo(secret),
       }
     } catch (error) {
       throw error
@@ -91,7 +96,7 @@ export async function createSecret(data: SecretDtoType): Promise<{
  */
 export async function getSecretById(id: string): Promise<{
   success: boolean
-  secret?: SecretRo
+  secret?: SecretSimpleRo
   error?: string
 }> {
   try {
@@ -107,7 +112,7 @@ export async function getSecretById(id: string): Promise<{
     }
 
     const secret = await database.secret.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -122,7 +127,7 @@ export async function getSecretById(id: string): Promise<{
 
     return {
       success: true,
-      secret: SecretRo.parse(secret),
+      secret: SecretEntity.getSimpleRo(secret),
     }
   } catch (error) {
     console.error("Get secret error:", error)
@@ -136,9 +141,12 @@ export async function getSecretById(id: string): Promise<{
 /**
  * Update a secret
  */
-export async function updateSecret(id: string, data: Partial<SecretDtoType>): Promise<{
+export async function updateSecret(
+  id: string,
+  data: Partial<SecretDtoType>
+): Promise<{
   success: boolean
-  secret?: SecretRo
+  secret?: SecretSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -156,7 +164,7 @@ export async function updateSecret(id: string, data: Partial<SecretDtoType>): Pr
 
     // Make sure secret exists and belongs to user
     const existingSecret = await database.secret.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -188,7 +196,7 @@ export async function updateSecret(id: string, data: Partial<SecretDtoType>): Pr
 
       return {
         success: true,
-        secret: SecretRo.parse(updatedSecret),
+        secret: SecretEntity.getSimpleRo(updatedSecret),
       }
     } catch (error) {
       throw error
@@ -231,7 +239,7 @@ export async function deleteSecret(id: string): Promise<{
 
     // Make sure secret exists and belongs to user
     const existingSecret = await database.secret.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -265,13 +273,13 @@ export async function deleteSecret(id: string): Promise<{
  * List secrets with optional filtering and pagination
  */
 export async function listSecrets(
-  page = 1, 
-  limit = 10, 
+  page = 1,
+  limit = 10,
   containerId?: string,
   platformId?: string
 ): Promise<{
   success: boolean
-  secrets?: SecretRo[]
+  secrets?: SecretSimpleRo[]
   total?: number
   error?: string
 }> {
@@ -290,7 +298,7 @@ export async function listSecrets(
     const skip = (page - 1) * limit
 
     // Build filters
-    const where: Prisma.SecretWhereInput = { 
+    const where: Prisma.SecretWhereInput = {
       userId: session.user.id,
     }
 
@@ -316,7 +324,7 @@ export async function listSecrets(
 
     return {
       success: true,
-      secrets: secrets.map((secret) => SecretRo.parse(secret)),
+      secrets: secrets.map((secret) => SecretEntity.getSimpleRo(secret)),
       total,
     }
   } catch (error) {
@@ -326,4 +334,4 @@ export async function listSecrets(
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

@@ -1,19 +1,20 @@
 "use server"
 
+import { headers } from "next/headers"
+import { TagEntity } from "@/entities/tag"
 import { database } from "@/prisma/client"
+import { TagDto, TagSimpleRo, type TagDto as TagDtoType } from "@/schemas/tag"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { TagDto, TagRo, type TagDto as TagDtoType } from "@/config/schema"
 import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
 
 /**
  * Create a new tag
  */
 export async function createTag(data: TagDtoType): Promise<{
   success: boolean
-  tag?: TagRo
+  tag?: TagSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -44,7 +45,7 @@ export async function createTag(data: TagDtoType): Promise<{
 
       return {
         success: true,
-        tag: TagRo.parse(tag),
+        tag: TagEntity.getSimpleRo(tag),
       }
     } catch (error) {
       throw error
@@ -71,7 +72,7 @@ export async function createTag(data: TagDtoType): Promise<{
  */
 export async function getTagById(id: string): Promise<{
   success: boolean
-  tag?: TagRo
+  tag?: TagSimpleRo
   error?: string
 }> {
   try {
@@ -87,7 +88,7 @@ export async function getTagById(id: string): Promise<{
     }
 
     const tag = await database.tag.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -102,7 +103,7 @@ export async function getTagById(id: string): Promise<{
 
     return {
       success: true,
-      tag: TagRo.parse(tag),
+      tag: TagEntity.getSimpleRo(tag),
     }
   } catch (error) {
     console.error("Get tag error:", error)
@@ -116,9 +117,12 @@ export async function getTagById(id: string): Promise<{
 /**
  * Update a tag
  */
-export async function updateTag(id: string, data: Partial<TagDtoType>): Promise<{
+export async function updateTag(
+  id: string,
+  data: Partial<TagDtoType>
+): Promise<{
   success: boolean
-  tag?: TagRo
+  tag?: TagSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -136,7 +140,7 @@ export async function updateTag(id: string, data: Partial<TagDtoType>): Promise<
 
     // Make sure tag exists and belongs to user
     const existingTag = await database.tag.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -162,7 +166,7 @@ export async function updateTag(id: string, data: Partial<TagDtoType>): Promise<
 
       return {
         success: true,
-        tag: TagRo.parse(updatedTag),
+        tag: TagEntity.getSimpleRo(updatedTag),
       }
     } catch (error) {
       throw error
@@ -205,7 +209,7 @@ export async function deleteTag(id: string): Promise<{
 
     // Make sure tag exists and belongs to user
     const existingTag = await database.tag.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -258,7 +262,7 @@ export async function deleteTag(id: string): Promise<{
  */
 export async function listTags(containerId?: string): Promise<{
   success: boolean
-  tags?: TagRo[]
+  tags?: TagSimpleRo[]
   error?: string
 }> {
   try {
@@ -274,7 +278,7 @@ export async function listTags(containerId?: string): Promise<{
     }
 
     // Build filters
-    const where: Prisma.TagWhereInput = { 
+    const where: Prisma.TagWhereInput = {
       userId: session.user.id,
     }
 
@@ -291,7 +295,7 @@ export async function listTags(containerId?: string): Promise<{
 
     return {
       success: true,
-      tags: tags.map((tag) => TagRo.parse(tag)),
+      tags: tags.map((tag) => TagEntity.getSimpleRo(tag)),
     }
   } catch (error) {
     console.error("List tags error:", error)
@@ -305,7 +309,10 @@ export async function listTags(containerId?: string): Promise<{
 /**
  * Add tag to credential
  */
-export async function addTagToCredential(tagId: string, credentialId: string): Promise<{
+export async function addTagToCredential(
+  tagId: string,
+  credentialId: string
+): Promise<{
   success: boolean
   error?: string
 }> {
@@ -323,7 +330,7 @@ export async function addTagToCredential(tagId: string, credentialId: string): P
 
     // Make sure tag exists and belongs to user
     const tag = await database.tag.findFirst({
-      where: { 
+      where: {
         id: tagId,
         userId: session.user.id,
       },
@@ -338,7 +345,7 @@ export async function addTagToCredential(tagId: string, credentialId: string): P
 
     // Make sure credential exists and belongs to user
     const credential = await database.credential.findFirst({
-      where: { 
+      where: {
         id: credentialId,
         userId: session.user.id,
       },
@@ -378,7 +385,10 @@ export async function addTagToCredential(tagId: string, credentialId: string): P
 /**
  * Remove tag from credential
  */
-export async function removeTagFromCredential(tagId: string, credentialId: string): Promise<{
+export async function removeTagFromCredential(
+  tagId: string,
+  credentialId: string
+): Promise<{
   success: boolean
   error?: string
 }> {
@@ -396,7 +406,7 @@ export async function removeTagFromCredential(tagId: string, credentialId: strin
 
     // Make sure tag exists and belongs to user
     const tag = await database.tag.findFirst({
-      where: { 
+      where: {
         id: tagId,
         userId: session.user.id,
       },
@@ -411,7 +421,7 @@ export async function removeTagFromCredential(tagId: string, credentialId: strin
 
     // Make sure credential exists and belongs to user
     const credential = await database.credential.findFirst({
-      where: { 
+      where: {
         id: credentialId,
         userId: session.user.id,
       },
@@ -446,4 +456,4 @@ export async function removeTagFromCredential(tagId: string, credentialId: strin
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

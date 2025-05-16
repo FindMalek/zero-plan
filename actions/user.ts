@@ -1,9 +1,9 @@
 "use server"
 
+import { headers } from "next/headers"
 import { database } from "@/prisma/client"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
-import { headers } from "next/headers"
 
 import { UserDto, UserRo, type UserDto as UserDtoType } from "@/config/schema"
 import { auth } from "@/lib/auth/server"
@@ -146,7 +146,10 @@ export async function getCurrentUser(): Promise<{
 /**
  * Update a user
  */
-export async function updateUser(id: string, data: Partial<UserDtoType>): Promise<{
+export async function updateUser(
+  id: string,
+  data: Partial<UserDtoType>
+): Promise<{
   success: boolean
   user?: UserRo
   error?: string
@@ -253,7 +256,10 @@ export async function deleteUser(id: string): Promise<{
 /**
  * List users with pagination
  */
-export async function listUsers(page = 1, limit = 10): Promise<{
+export async function listUsers(
+  page = 1,
+  limit = 10
+): Promise<{
   success: boolean
   users?: UserRo[]
   total?: number
@@ -285,4 +291,4 @@ export async function listUsers(page = 1, limit = 10): Promise<{
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

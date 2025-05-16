@@ -1,23 +1,24 @@
 "use server"
 
+import { headers } from "next/headers"
+import { CredentialEntity } from "@/entities/credential"
 import { database } from "@/prisma/client"
+import {
+  CredentialDto,
+  CredentialSimpleRo,
+  type CredentialDto as CredentialDtoType,
+} from "@/schemas/credential"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { 
-  CredentialDto, 
-  CredentialRo, 
-  type CredentialDto as CredentialDtoType 
-} from "@/config/schema"
 import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
 
 /**
  * Create a new credential
  */
 export async function createCredential(data: CredentialDtoType): Promise<{
   success: boolean
-  credential?: CredentialRo
+  credential?: CredentialSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -61,7 +62,7 @@ export async function createCredential(data: CredentialDtoType): Promise<{
 
       return {
         success: true,
-        credential: CredentialRo.parse(credential),
+        credential: CredentialEntity.getSimpleRo(credential),
       }
     } catch (error) {
       throw error
@@ -88,7 +89,7 @@ export async function createCredential(data: CredentialDtoType): Promise<{
  */
 export async function getCredentialById(id: string): Promise<{
   success: boolean
-  credential?: CredentialRo
+  credential?: CredentialSimpleRo
   error?: string
 }> {
   try {
@@ -104,7 +105,7 @@ export async function getCredentialById(id: string): Promise<{
     }
 
     const credential = await database.credential.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -125,7 +126,7 @@ export async function getCredentialById(id: string): Promise<{
 
     return {
       success: true,
-      credential: CredentialRo.parse(credential),
+      credential: CredentialEntity.getSimpleRo(credential),
     }
   } catch (error) {
     console.error("Get credential error:", error)
@@ -139,9 +140,12 @@ export async function getCredentialById(id: string): Promise<{
 /**
  * Update a credential
  */
-export async function updateCredential(id: string, data: Partial<CredentialDtoType>): Promise<{
+export async function updateCredential(
+  id: string,
+  data: Partial<CredentialDtoType>
+): Promise<{
   success: boolean
-  credential?: CredentialRo
+  credential?: CredentialSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
@@ -159,7 +163,7 @@ export async function updateCredential(id: string, data: Partial<CredentialDtoTy
 
     // Make sure credential exists and belongs to user
     const existingCredential = await database.credential.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -199,7 +203,7 @@ export async function updateCredential(id: string, data: Partial<CredentialDtoTy
 
       return {
         success: true,
-        credential: CredentialRo.parse(updatedCredential),
+        credential: CredentialEntity.getSimpleRo(updatedCredential),
       }
     } catch (error) {
       throw error
@@ -242,7 +246,7 @@ export async function deleteCredential(id: string): Promise<{
 
     // Make sure credential exists and belongs to user
     const existingCredential = await database.credential.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -276,13 +280,13 @@ export async function deleteCredential(id: string): Promise<{
  * List credentials with optional filtering and pagination
  */
 export async function listCredentials(
-  page = 1, 
-  limit = 10, 
+  page = 1,
+  limit = 10,
   containerId?: string,
   platformId?: string
 ): Promise<{
   success: boolean
-  credentials?: CredentialRo[]
+  credentials?: CredentialSimpleRo[]
   total?: number
   error?: string
 }> {
@@ -301,7 +305,7 @@ export async function listCredentials(
     const skip = (page - 1) * limit
 
     // Build filters
-    const where: Prisma.CredentialWhereInput = { 
+    const where: Prisma.CredentialWhereInput = {
       userId: session.user.id,
     }
 
@@ -327,7 +331,9 @@ export async function listCredentials(
 
     return {
       success: true,
-      credentials: credentials.map((credential) => CredentialRo.parse(credential)),
+      credentials: credentials.map((credential) =>
+        CredentialEntity.getSimpleRo(credential)
+      ),
       total,
     }
   } catch (error) {
@@ -360,7 +366,7 @@ export async function copyCredentialPassword(id: string): Promise<{
 
     // Make sure credential exists and belongs to user
     const existingCredential = await database.credential.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -389,4 +395,4 @@ export async function copyCredentialPassword(id: string): Promise<{
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

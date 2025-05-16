@@ -45,7 +45,7 @@ export const CredentialMetadataDto = z.object({
   credentialId: z.string(),
 })
 
-export const CredentialMetadataRo = z.object({
+export const CredentialMetadataSimpleRo = z.object({
   id: z.string(),
 
   recoveryEmail: z.string().nullable(),
@@ -61,7 +61,9 @@ export const CredentialMetadataRo = z.object({
 })
 
 export type CredentialMetadataDto = z.infer<typeof CredentialMetadataDto>
-export type CredentialMetadataRo = z.infer<typeof CredentialMetadataRo>
+export type CredentialMetadataSimpleRo = z.infer<
+  typeof CredentialMetadataSimpleRo
+>
 
 export const CredentialHistoryDto = z.object({
   oldPassword: z.string(),

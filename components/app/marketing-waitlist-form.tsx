@@ -5,10 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-import {
-  WaitlistUserDtoSchema,
-  type WaitlistUserDto,
-} from "@/config/schema"
+import { WaitlistUserDtoSchema, type WaitlistUserDto } from "@/config/schema"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
