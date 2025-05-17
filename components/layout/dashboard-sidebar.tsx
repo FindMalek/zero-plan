@@ -27,7 +27,7 @@ interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -50,6 +50,11 @@ export function DashboardSidebar({ user, ...props }: DashboardSidebarProps) {
           <SidebarGroupLabel>Items</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <DashboardSidebarMenuItemComponent
+                href="/dashboard"
+                icon={<Icons.home className="h-4 w-4" />}
+                label="Overview"
+              />
               <DashboardSidebarMenuItemComponent
                 href="/dashboard/accounts"
                 icon={<Icons.user className="h-4 w-4" />}

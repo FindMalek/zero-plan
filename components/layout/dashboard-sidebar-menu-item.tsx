@@ -3,7 +3,16 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
+import {
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface DashboardSidebarMenuItemProps {
   href: string
@@ -17,16 +26,27 @@ export function DashboardSidebarMenuItemComponent({
   label,
 }: DashboardSidebarMenuItemProps) {
   const pathname = usePathname()
+  const { state, isMobile } = useSidebar()
+  const isCollapsed = !isMobile && state === "collapsed"
   const pathIsActive = pathname.includes(href)
 
   return (
     <SidebarMenuItem>
-      <Link href={href}>
-        <SidebarMenuButton isActive={pathIsActive}>
-          {icon}
-          <span>{label}</span>
-        </SidebarMenuButton>
-      </Link>
+      <Tooltip open={isCollapsed ? undefined : false} delayDuration={0}>
+        <TooltipTrigger asChild>
+          <Link href={href}>
+            <SidebarMenuButton isActive={pathIsActive}>
+              {icon}
+              {!isCollapsed && <span>{label}</span>}
+            </SidebarMenuButton>
+          </Link>
+        </TooltipTrigger>
+        {isCollapsed && (
+          <TooltipContent side="right" sideOffset={5}>
+            {label}
+          </TooltipContent>
+        )}
+      </Tooltip>
     </SidebarMenuItem>
   )
 }

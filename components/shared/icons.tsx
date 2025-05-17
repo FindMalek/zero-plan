@@ -32,6 +32,7 @@ import {
   Folder,
   GlobeIcon,
   HelpCircle,
+  HomeIcon,
   HospitalIcon,
   Image as ImageIcon,
   Inbox,
@@ -177,4 +178,5 @@ export const Icons = {
   lifecycle: ListIcon,
   arrowUpCircle: ArrowUpCircleIcon,
   key: KeyIcon,
+  home: HomeIcon,
 }
