@@ -1,4 +1,5 @@
 import { DashboardDynamicBreadcrumb } from "@/components/layout/dashboard-dynamic-breadcrumb"
+import { DashboardSearchCombobox } from "@/components/layout/dashboard-search-combobox"
 import { ModeToggle } from "@/components/shared/mode-toggle"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -14,6 +15,7 @@ export function DashboardSiteHeader() {
         />
         <DashboardDynamicBreadcrumb />
       </div>
+      <DashboardSearchCombobox />
       <ModeToggle />
     </header>
   )
