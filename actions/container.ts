@@ -1,31 +1,27 @@
 "use server"
 
+import { ContainerEntity } from "@/entities/container"
 import { database } from "@/prisma/client"
+import {
+  ContainerDto,
+  ContainerSimpleRo,
+  type ContainerDto as ContainerDtoType,
+} from "@/schemas/container"
 import { z } from "zod"
 
-import { ContainerDto, ContainerRo, type ContainerDto as ContainerDtoType } from "@/config/schema"
-import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
+import { verifySession } from "@/lib/auth/verify"
+
 /**
  * Create a new container
  */
 export async function createContainer(data: ContainerDtoType): Promise<{
   success: boolean
-  container?: ContainerRo
+  container?: ContainerSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = ContainerDto.parse(data)
@@ -44,12 +40,18 @@ export async function createContainer(data: ContainerDtoType): Promise<{
 
       return {
         success: true,
-        container: ContainerRo.parse(container),
+        container: ContainerEntity.getSimpleRo(container),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -71,23 +73,14 @@ export async function createContainer(data: ContainerDtoType): Promise<{
  */
 export async function getContainerById(id: string): Promise<{
   success: boolean
-  container?: ContainerRo
+  container?: ContainerSimpleRo
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const container = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -102,9 +95,15 @@ export async function getContainerById(id: string): Promise<{
 
     return {
       success: true,
-      container: ContainerRo.parse(container),
+      container: ContainerEntity.getSimpleRo(container),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get container error:", error)
     return {
       success: false,
@@ -116,27 +115,21 @@ export async function getContainerById(id: string): Promise<{
 /**
  * Update a container
  */
-export async function updateContainer(id: string, data: Partial<ContainerDtoType>): Promise<{
+export async function updateContainer(
+  id: string,
+  data: Partial<ContainerDtoType>
+): Promise<{
   success: boolean
-  container?: ContainerRo
+  container?: ContainerSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -165,12 +158,18 @@ export async function updateContainer(id: string, data: Partial<ContainerDtoType
 
       return {
         success: true,
-        container: ContainerRo.parse(updatedContainer),
+        container: ContainerEntity.getSimpleRo(updatedContainer),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -195,20 +194,11 @@ export async function deleteContainer(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -244,6 +234,12 @@ export async function deleteContainer(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Container deletion error:", error)
     return {
       success: false,
@@ -255,23 +251,17 @@ export async function deleteContainer(id: string): Promise<{
 /**
  * List containers with pagination
  */
-export async function listContainers(page = 1, limit = 10): Promise<{
+export async function listContainers(
+  page = 1,
+  limit = 10
+): Promise<{
   success: boolean
-  containers?: ContainerRo[]
+  containers?: ContainerSimpleRo[]
   total?: number
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const skip = (page - 1) * limit
 
@@ -289,10 +279,18 @@ export async function listContainers(page = 1, limit = 10): Promise<{
 
     return {
       success: true,
-      containers: containers.map((container) => ContainerRo.parse(container)),
+      containers: containers.map((container) =>
+        ContainerEntity.getSimpleRo(container)
+      ),
       total,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("List containers error:", error)
     return {
       success: false,
@@ -315,20 +313,11 @@ export async function getContainerStats(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure container exists and belongs to user
     const existingContainer = await database.container.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -342,12 +331,13 @@ export async function getContainerStats(id: string): Promise<{
     }
 
     // Get statistics
-    const [credentialCount, secretCount, cardCount, tagCount] = await Promise.all([
-      database.credential.count({ where: { containerId: id } }),
-      database.secret.count({ where: { containerId: id } }),
-      database.card.count({ where: { containerId: id } }),
-      database.tag.count({ where: { containerId: id } }),
-    ])
+    const [credentialCount, secretCount, cardCount, tagCount] =
+      await Promise.all([
+        database.credential.count({ where: { containerId: id } }),
+        database.secret.count({ where: { containerId: id } }),
+        database.card.count({ where: { containerId: id } }),
+        database.tag.count({ where: { containerId: id } }),
+      ])
 
     return {
       success: true,
@@ -359,10 +349,16 @@ export async function getContainerStats(id: string): Promise<{
       },
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get container stats error:", error)
     return {
       success: false,
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

@@ -1,33 +1,28 @@
 "use server"
 
+import { SecretEntity } from "@/entities/secret"
 import { database } from "@/prisma/client"
+import {
+  SecretDto,
+  SecretSimpleRo,
+  type SecretDto as SecretDtoType,
+} from "@/schemas/secret"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { SecretDto, SecretRo, type SecretDto as SecretDtoType } from "@/config/schema"
-import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new secret
  */
 export async function createSecret(data: SecretDtoType): Promise<{
   success: boolean
-  secret?: SecretRo
+  secret?: SecretSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = SecretDto.parse(data)
@@ -64,12 +59,18 @@ export async function createSecret(data: SecretDtoType): Promise<{
 
       return {
         success: true,
-        secret: SecretRo.parse(secret),
+        secret: SecretEntity.getSimpleRo(secret),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -91,23 +92,14 @@ export async function createSecret(data: SecretDtoType): Promise<{
  */
 export async function getSecretById(id: string): Promise<{
   success: boolean
-  secret?: SecretRo
+  secret?: SecretSimpleRo
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const secret = await database.secret.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -122,9 +114,15 @@ export async function getSecretById(id: string): Promise<{
 
     return {
       success: true,
-      secret: SecretRo.parse(secret),
+      secret: SecretEntity.getSimpleRo(secret),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get secret error:", error)
     return {
       success: false,
@@ -136,27 +134,21 @@ export async function getSecretById(id: string): Promise<{
 /**
  * Update a secret
  */
-export async function updateSecret(id: string, data: Partial<SecretDtoType>): Promise<{
+export async function updateSecret(
+  id: string,
+  data: Partial<SecretDtoType>
+): Promise<{
   success: boolean
-  secret?: SecretRo
+  secret?: SecretSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure secret exists and belongs to user
     const existingSecret = await database.secret.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -188,12 +180,18 @@ export async function updateSecret(id: string, data: Partial<SecretDtoType>): Pr
 
       return {
         success: true,
-        secret: SecretRo.parse(updatedSecret),
+        secret: SecretEntity.getSimpleRo(updatedSecret),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -218,20 +216,11 @@ export async function deleteSecret(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure secret exists and belongs to user
     const existingSecret = await database.secret.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -253,6 +242,12 @@ export async function deleteSecret(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Secret deletion error:", error)
     return {
       success: false,
@@ -265,32 +260,23 @@ export async function deleteSecret(id: string): Promise<{
  * List secrets with optional filtering and pagination
  */
 export async function listSecrets(
-  page = 1, 
-  limit = 10, 
+  page = 1,
+  limit = 10,
   containerId?: string,
   platformId?: string
 ): Promise<{
   success: boolean
-  secrets?: SecretRo[]
+  secrets?: SecretSimpleRo[]
   total?: number
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const skip = (page - 1) * limit
 
     // Build filters
-    const where: Prisma.SecretWhereInput = { 
+    const where: Prisma.SecretWhereInput = {
       userId: session.user.id,
     }
 
@@ -316,14 +302,20 @@ export async function listSecrets(
 
     return {
       success: true,
-      secrets: secrets.map((secret) => SecretRo.parse(secret)),
+      secrets: secrets.map((secret) => SecretEntity.getSimpleRo(secret)),
       total,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("List secrets error:", error)
     return {
       success: false,
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

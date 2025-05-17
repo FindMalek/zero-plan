@@ -1,33 +1,30 @@
 "use server"
 
+import { headers } from "next/headers"
+import { PlatformEntity } from "@/entities/platform"
 import { database } from "@/prisma/client"
+import {
+  PlatformDto,
+  PlatformSimpleRo,
+  type PlatformDto as PlatformDtoType,
+} from "@/schemas/platform"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { PlatformDto, PlatformRo, type PlatformDto as PlatformDtoType } from "@/config/schema"
 import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new platform
  */
 export async function createPlatform(data: PlatformDtoType): Promise<{
   success: boolean
-  platform?: PlatformRo
+  platform?: PlatformSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = PlatformDto.parse(data)
@@ -46,12 +43,18 @@ export async function createPlatform(data: PlatformDtoType): Promise<{
 
       return {
         success: true,
-        platform: PlatformRo.parse(platform),
+        platform: PlatformEntity.getSimpleRo(platform),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -73,7 +76,7 @@ export async function createPlatform(data: PlatformDtoType): Promise<{
  */
 export async function getPlatformById(id: string): Promise<{
   success: boolean
-  platform?: PlatformRo
+  platform?: PlatformSimpleRo
   error?: string
 }> {
   try {
@@ -90,7 +93,7 @@ export async function getPlatformById(id: string): Promise<{
 
     return {
       success: true,
-      platform: PlatformRo.parse(platform),
+      platform: PlatformEntity.getSimpleRo(platform),
     }
   } catch (error) {
     console.error("Get platform error:", error)
@@ -104,23 +107,17 @@ export async function getPlatformById(id: string): Promise<{
 /**
  * Update a platform
  */
-export async function updatePlatform(id: string, data: Partial<PlatformDtoType>): Promise<{
+export async function updatePlatform(
+  id: string,
+  data: Partial<PlatformDtoType>
+): Promise<{
   success: boolean
-  platform?: PlatformRo
+  platform?: PlatformSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure platform exists
     const existingPlatform = await database.platform.findUnique({
@@ -135,7 +132,10 @@ export async function updatePlatform(id: string, data: Partial<PlatformDtoType>)
     }
 
     // Check ownership if platform has an owner
-    if (existingPlatform.userId && existingPlatform.userId !== session.user.id) {
+    if (
+      existingPlatform.userId &&
+      existingPlatform.userId !== session.user.id
+    ) {
       return {
         success: false,
         error: "Not authorized to update this platform",
@@ -158,12 +158,18 @@ export async function updatePlatform(id: string, data: Partial<PlatformDtoType>)
 
       return {
         success: true,
-        platform: PlatformRo.parse(updatedPlatform),
+        platform: PlatformEntity.getSimpleRo(updatedPlatform),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -188,16 +194,7 @@ export async function deletePlatform(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure platform exists
     const existingPlatform = await database.platform.findUnique({
@@ -212,7 +209,10 @@ export async function deletePlatform(id: string): Promise<{
     }
 
     // Check ownership if platform has an owner
-    if (existingPlatform.userId && existingPlatform.userId !== session.user.id) {
+    if (
+      existingPlatform.userId &&
+      existingPlatform.userId !== session.user.id
+    ) {
       return {
         success: false,
         error: "Not authorized to delete this platform",
@@ -228,7 +228,8 @@ export async function deletePlatform(id: string): Promise<{
     if (credentialCount > 0 || secretCount > 0) {
       return {
         success: false,
-        error: "Cannot delete platform that is in use by credentials or secrets",
+        error:
+          "Cannot delete platform that is in use by credentials or secrets",
       }
     }
 
@@ -241,6 +242,12 @@ export async function deletePlatform(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Platform deletion error:", error)
     return {
       success: false,
@@ -253,12 +260,12 @@ export async function deletePlatform(id: string): Promise<{
  * List platforms with optional filtering and pagination
  */
 export async function listPlatforms(
-  page = 1, 
-  limit = 10, 
+  page = 1,
+  limit = 10,
   includeSystem = true
 ): Promise<{
   success: boolean
-  platforms?: PlatformRo[]
+  platforms?: PlatformSimpleRo[]
   total?: number
   error?: string
 }> {
@@ -267,12 +274,12 @@ export async function listPlatforms(
     const session = await auth.api.getSession({
       headers: await headers(),
     })
-    
+
     const skip = (page - 1) * limit
 
     // Build filters based on whether to include system platforms
     const where: Prisma.PlatformWhereInput = {}
-    
+
     if (!includeSystem && session?.user?.id) {
       where.userId = session.user.id
     }
@@ -291,7 +298,9 @@ export async function listPlatforms(
 
     return {
       success: true,
-      platforms: platforms.map((platform) => PlatformRo.parse(platform)),
+      platforms: platforms.map((platform) =>
+        PlatformEntity.getSimpleRo(platform)
+      ),
       total,
     }
   } catch (error) {
@@ -301,4 +310,4 @@ export async function listPlatforms(
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

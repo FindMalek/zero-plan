@@ -4,10 +4,7 @@ import { database } from "@/prisma/client"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import {
-  WaitlistUserDtoSchema,
-  type WaitlistUserDto,
-} from "@/config/schema"
+import { WaitlistUserDtoSchema, type WaitlistUserDto } from "@/config/schema"
 
 /**
  * Join waitlist server action

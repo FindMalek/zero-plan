@@ -1,33 +1,24 @@
 "use server"
 
+import { TagEntity } from "@/entities/tag"
 import { database } from "@/prisma/client"
+import { TagDto, TagSimpleRo, type TagDto as TagDtoType } from "@/schemas/tag"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { TagDto, TagRo, type TagDto as TagDtoType } from "@/config/schema"
-import { auth } from "@/lib/auth/server"
-import { headers } from "next/headers"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new tag
  */
 export async function createTag(data: TagDtoType): Promise<{
   success: boolean
-  tag?: TagRo
+  tag?: TagSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = TagDto.parse(data)
@@ -44,12 +35,18 @@ export async function createTag(data: TagDtoType): Promise<{
 
       return {
         success: true,
-        tag: TagRo.parse(tag),
+        tag: TagEntity.getSimpleRo(tag),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -71,23 +68,14 @@ export async function createTag(data: TagDtoType): Promise<{
  */
 export async function getTagById(id: string): Promise<{
   success: boolean
-  tag?: TagRo
+  tag?: TagSimpleRo
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const tag = await database.tag.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -102,9 +90,15 @@ export async function getTagById(id: string): Promise<{
 
     return {
       success: true,
-      tag: TagRo.parse(tag),
+      tag: TagEntity.getSimpleRo(tag),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get tag error:", error)
     return {
       success: false,
@@ -116,27 +110,21 @@ export async function getTagById(id: string): Promise<{
 /**
  * Update a tag
  */
-export async function updateTag(id: string, data: Partial<TagDtoType>): Promise<{
+export async function updateTag(
+  id: string,
+  data: Partial<TagDtoType>
+): Promise<{
   success: boolean
-  tag?: TagRo
+  tag?: TagSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure tag exists and belongs to user
     const existingTag = await database.tag.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -162,12 +150,18 @@ export async function updateTag(id: string, data: Partial<TagDtoType>): Promise<
 
       return {
         success: true,
-        tag: TagRo.parse(updatedTag),
+        tag: TagEntity.getSimpleRo(updatedTag),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -192,20 +186,11 @@ export async function deleteTag(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure tag exists and belongs to user
     const existingTag = await database.tag.findFirst({
-      where: { 
+      where: {
         id,
         userId: session.user.id,
       },
@@ -245,6 +230,12 @@ export async function deleteTag(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Tag deletion error:", error)
     return {
       success: false,
@@ -258,23 +249,14 @@ export async function deleteTag(id: string): Promise<{
  */
 export async function listTags(containerId?: string): Promise<{
   success: boolean
-  tags?: TagRo[]
+  tags?: TagSimpleRo[]
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Build filters
-    const where: Prisma.TagWhereInput = { 
+    const where: Prisma.TagWhereInput = {
       userId: session.user.id,
     }
 
@@ -291,9 +273,15 @@ export async function listTags(containerId?: string): Promise<{
 
     return {
       success: true,
-      tags: tags.map((tag) => TagRo.parse(tag)),
+      tags: tags.map((tag) => TagEntity.getSimpleRo(tag)),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("List tags error:", error)
     return {
       success: false,
@@ -305,25 +293,19 @@ export async function listTags(containerId?: string): Promise<{
 /**
  * Add tag to credential
  */
-export async function addTagToCredential(tagId: string, credentialId: string): Promise<{
+export async function addTagToCredential(
+  tagId: string,
+  credentialId: string
+): Promise<{
   success: boolean
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure tag exists and belongs to user
     const tag = await database.tag.findFirst({
-      where: { 
+      where: {
         id: tagId,
         userId: session.user.id,
       },
@@ -338,7 +320,7 @@ export async function addTagToCredential(tagId: string, credentialId: string): P
 
     // Make sure credential exists and belongs to user
     const credential = await database.credential.findFirst({
-      where: { 
+      where: {
         id: credentialId,
         userId: session.user.id,
       },
@@ -367,6 +349,12 @@ export async function addTagToCredential(tagId: string, credentialId: string): P
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Add tag to credential error:", error)
     return {
       success: false,
@@ -378,25 +366,19 @@ export async function addTagToCredential(tagId: string, credentialId: string): P
 /**
  * Remove tag from credential
  */
-export async function removeTagFromCredential(tagId: string, credentialId: string): Promise<{
+export async function removeTagFromCredential(
+  tagId: string,
+  credentialId: string
+): Promise<{
   success: boolean
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure tag exists and belongs to user
     const tag = await database.tag.findFirst({
-      where: { 
+      where: {
         id: tagId,
         userId: session.user.id,
       },
@@ -411,7 +393,7 @@ export async function removeTagFromCredential(tagId: string, credentialId: strin
 
     // Make sure credential exists and belongs to user
     const credential = await database.credential.findFirst({
-      where: { 
+      where: {
         id: credentialId,
         userId: session.user.id,
       },
@@ -440,10 +422,16 @@ export async function removeTagFromCredential(tagId: string, credentialId: strin
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Remove tag from credential error:", error)
     return {
       success: false,
       error: "Something went wrong. Please try again.",
     }
   }
-} 
+}

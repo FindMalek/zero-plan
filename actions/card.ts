@@ -1,33 +1,30 @@
 "use server"
 
 import { headers } from "next/headers"
+import { CardEntity } from "@/entities/card"
 import { database } from "@/prisma/client"
+import {
+  CardDto,
+  CardSimpleRo,
+  type CardDto as CardDtoType,
+} from "@/schemas/card"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
-import { CardDto, CardRo, type CardDto as CardDtoType } from "@/config/schema"
 import { auth } from "@/lib/auth/server"
+import { verifySession } from "@/lib/auth/verify"
 
 /**
  * Create a new card
  */
 export async function createCard(data: CardDtoType): Promise<{
   success: boolean
-  card?: CardRo
+  card?: CardSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Validate using our DTO schema
     const validatedData = CardDto.parse(data)
@@ -49,12 +46,18 @@ export async function createCard(data: CardDtoType): Promise<{
 
       return {
         success: true,
-        card: CardRo.parse(card),
+        card: CardEntity.getSimpleRo(card),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -76,20 +79,11 @@ export async function createCard(data: CardDtoType): Promise<{
  */
 export async function getCardById(id: string): Promise<{
   success: boolean
-  card?: CardRo
+  card?: CardSimpleRo
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const card = await database.card.findFirst({
       where: {
@@ -107,9 +101,15 @@ export async function getCardById(id: string): Promise<{
 
     return {
       success: true,
-      card: CardRo.parse(card),
+      card: CardEntity.getSimpleRo(card),
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Get card error:", error)
     return {
       success: false,
@@ -126,21 +126,12 @@ export async function updateCard(
   data: Partial<CardDtoType>
 ): Promise<{
   success: boolean
-  card?: CardRo
+  card?: CardSimpleRo
   error?: string
   issues?: z.ZodIssue[]
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure card exists and belongs to user
     const existingCard = await database.card.findFirst({
@@ -176,12 +167,18 @@ export async function updateCard(
 
       return {
         success: true,
-        card: CardRo.parse(updatedCard),
+        card: CardEntity.getSimpleRo(updatedCard),
       }
     } catch (error) {
       throw error
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -206,16 +203,7 @@ export async function deleteCard(id: string): Promise<{
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     // Make sure card exists and belongs to user
     const existingCard = await database.card.findFirst({
@@ -241,6 +229,12 @@ export async function deleteCard(id: string): Promise<{
       success: true,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("Card deletion error:", error)
     return {
       success: false,
@@ -258,21 +252,12 @@ export async function listCards(
   containerId?: string
 ): Promise<{
   success: boolean
-  cards?: CardRo[]
+  cards?: CardSimpleRo[]
   total?: number
   error?: string
 }> {
   try {
-    // Get authenticated user
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: "Not authenticated",
-      }
-    }
+    const session = await verifySession()
 
     const skip = (page - 1) * limit
 
@@ -299,10 +284,16 @@ export async function listCards(
 
     return {
       success: true,
-      cards: cards.map((card) => CardRo.parse(card)),
+      cards: cards.map((card) => CardEntity.getSimpleRo(card)),
       total,
     }
   } catch (error) {
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
     console.error("List cards error:", error)
     return {
       success: false,
