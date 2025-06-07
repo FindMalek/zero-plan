@@ -1,6 +1,7 @@
-import { AccountStatus, PrismaClient } from "@prisma/client"
+import { AccountStatus, Prisma, PrismaClient } from "@prisma/client"
 
-import { saltAndHashPassword } from "./users"
+import { saltAndHashPassword } from "../../lib/auth/password"
+import { encryptDataSync, SEED_ENCRYPTION_CONFIG } from "../../lib/encryption"
 
 async function seedCredentials(prisma: PrismaClient) {
   console.log("🌱 Seeding credentials...")
@@ -28,9 +29,11 @@ async function seedCredentials(prisma: PrismaClient) {
   }
 
   // Prepare arrays for bulk insertion
-  const credentialsData = []
-  const credentialTagConnections = [] // Store credential-tag connections for later
-  const metadataData = [] // Store metadata for later
+  const encryptedDataToCreate: Prisma.EncryptedDataCreateManyInput[] = []
+  const credentialsToCreate: Prisma.CredentialCreateManyInput[] = []
+  const credentialTagConnections: { credentialId: string; tagIds: string[] }[] =
+    []
+  const metadataData: Prisma.CredentialMetadataCreateManyInput[] = []
 
   // Hash passwords in parallel to speed up seeding
   const googlePasswordPromise = saltAndHashPassword("GooglePass123!")
@@ -62,15 +65,36 @@ async function seedCredentials(prisma: PrismaClient) {
     )
     const workTag = tags.find((t) => t.userId === user.id && t.name === "Work")
 
-    // Google credential
+    // Prepare credential IDs
     const googleCredId = `credential_google_${user.id}`
-    credentialsData.push({
+    const githubCredId = `credential_github_${user.id}`
+    const awsCredId = `credential_aws_${user.id}`
+
+    // Prepare encrypted data IDs
+    const googlePasswordEncId = `enc_google_pass_${user.id}`
+    const githubPasswordEncId = `enc_github_pass_${user.id}`
+    const awsPasswordEncId = `enc_aws_pass_${user.id}`
+
+    // Prepare encrypted data for Google password
+    const googlePasswordEncrypted = await encryptDataSync(
+      googlePassword,
+      SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV
+    )
+    encryptedDataToCreate.push({
+      id: googlePasswordEncId,
+      encryptedValue: googlePasswordEncrypted,
+      encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
+    })
+
+    // Prepare Google credential
+    credentialsToCreate.push({
       id: googleCredId,
-      username: user.email,
-      password: googlePassword,
+      identifier: user.email,
+      passwordEncryptionId: googlePasswordEncId,
       status: AccountStatus.ACTIVE,
       description: "Google account",
-      loginUrl: "https://accounts.google.com",
       lastViewed: new Date(),
       updatedAt: new Date(),
       createdAt: new Date(),
@@ -87,15 +111,26 @@ async function seedCredentials(prisma: PrismaClient) {
       })
     }
 
-    // GitHub credential
-    const githubCredId = `credential_github_${user.id}`
-    credentialsData.push({
+    // Prepare encrypted data for GitHub password
+    const githubPasswordEncrypted = await encryptDataSync(
+      githubPassword,
+      SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV
+    )
+    encryptedDataToCreate.push({
+      id: githubPasswordEncId,
+      encryptedValue: githubPasswordEncrypted,
+      encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+      iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
+    })
+
+    // Prepare GitHub credential
+    credentialsToCreate.push({
       id: githubCredId,
-      username: `${user.name.replace(" ", "").toLowerCase()}`,
-      password: githubPassword,
+      identifier: `${user.name.replace(" ", "").toLowerCase()}`,
+      passwordEncryptionId: githubPasswordEncId,
       status: AccountStatus.ACTIVE,
       description: "GitHub account",
-      loginUrl: "https://github.com/login",
       lastViewed: new Date(),
       updatedAt: new Date(),
       createdAt: new Date(),
@@ -122,14 +157,26 @@ async function seedCredentials(prisma: PrismaClient) {
 
     // AWS credential if work container exists
     if (workContainer) {
-      const awsCredId = `credential_aws_${user.id}`
-      credentialsData.push({
+      // Prepare encrypted data for AWS password
+      const awsPasswordEncrypted = await encryptDataSync(
+        awsPassword,
+        SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+        SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV
+      )
+      encryptedDataToCreate.push({
+        id: awsPasswordEncId,
+        encryptedValue: awsPasswordEncrypted,
+        encryptionKey: SEED_ENCRYPTION_CONFIG.MASTER_KEY,
+        iv: SEED_ENCRYPTION_CONFIG.CREDENTIAL_PASSWORD_IV,
+      })
+
+      // Prepare AWS credential
+      credentialsToCreate.push({
         id: awsCredId,
-        username: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
-        password: awsPassword,
+        identifier: `${user.name.replace(" ", ".").toLowerCase()}@company.com`,
+        passwordEncryptionId: awsPasswordEncId,
         status: AccountStatus.ACTIVE,
         description: "AWS account",
-        loginUrl: "https://console.aws.amazon.com",
         updatedAt: new Date(),
         createdAt: new Date(),
         platformId: awsPlatform.id,
@@ -147,14 +194,28 @@ async function seedCredentials(prisma: PrismaClient) {
     }
   }
 
-  // Bulk create all credentials
-  await prisma.credential.createMany({
-    data: credentialsData,
-  })
+  // Use a transaction to batch all operations
+  await prisma.$transaction(async (tx) => {
+    // Create all encrypted data first
+    if (encryptedDataToCreate.length > 0) {
+      await tx.encryptedData.createMany({
+        data: encryptedDataToCreate,
+      })
+    }
 
-  // Bulk create all metadata
-  await prisma.credentialMetadata.createMany({
-    data: metadataData,
+    // Then create all credentials
+    if (credentialsToCreate.length > 0) {
+      await tx.credential.createMany({
+        data: credentialsToCreate,
+      })
+    }
+
+    // Bulk create all metadata
+    if (metadataData.length > 0) {
+      await tx.credentialMetadata.createMany({
+        data: metadataData,
+      })
+    }
   })
 
   // Connect credentials to tags

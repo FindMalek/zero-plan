@@ -21,12 +21,12 @@ model Health {
 model Platform {
   id String @id @default(cuid())
 
-  name String
-  logo String?
+  name     String
+  logo     String?
+  loginUrl String?
 
   status PlatformStatus @default(PENDING)
 
-  secret     Secret[]
   credential Credential[]
 
   updatedAt DateTime @updatedAt
@@ -39,11 +39,13 @@ model Platform {
 }
 
 /**
- * Represents a tag associated with a credential.
+ * Represents a tag associated with credentials and cards.
  * @property id - Unique identifier for the tag. Type: String. Generated using cuid().
  * @property name - Name of the tag. Type: String.
  * @property color - Color of the tag. Type: String. Optional.
  * @property credentials - Credentials associated with the tag. Type: Credential[]. Relation to Credential model.
+ * @property cards - Cards associated with the tag. Type: Card[]. Relation to Card model.
+ * @property secrets - Secrets associated with the tag. Type: Secret[]. Relation to Secret model.
  */
 model Tag {
   id String @id @default(cuid())
@@ -51,6 +53,7 @@ model Tag {
   name  String
   color String?
 
+  cards       Card[]
   credentials Credential[]
 
   userId String?
@@ -69,6 +72,7 @@ model Tag {
  * @property name - Name of the container. Type: String.
  * @property description - Description of the container. Type: String. Optional.
  * @property icon - Icon of the container. Type: String. Optional.
+ * @property type - Type of the container defining what entities it can hold. Type: ContainerType. Defaults to MIXED.
  * @property createdAt - Timestamp when the container was created. Type: DateTime. Defaults to current time.
  * @property updatedAt - Timestamp when the container was last updated. Type: DateTime. Updated automatically.
  * @property user - User who owns the container. Type: User. Relation to User model.
@@ -86,16 +90,19 @@ model Container {
 
   description String?
 
-  tags        Tag[]
+  type ContainerType @default(MIXED)
+  tags Tag[]
+
   cards       Card[]
-  credentials Credential[]
   secrets     Secret[]
+  credentials Credential[]
 
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 
-  user   User   @relation(fields: [userId], references: [id])
   userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
+  @@index([type])
 }

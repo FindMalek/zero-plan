@@ -1,19 +1,25 @@
 /**
  * Represents the types of secrets that can be stored.
  * @property API_KEY - API key.
- * @property ENV_VARIABLE - Environment variable.
  * @property DATABASE_URL - Database URL.
  * @property CLOUD_STORAGE_KEY - Cloud storage key.
- * @property THIRD_PARTY_API_KEY - Third-party API key.
- * @property OTHER - Other types of secrets.
+ * @property SSH_KEY - SSH private key for server access.
+ * @property JWT_SECRET - JWT signing secret.
+ * @property OAUTH_TOKEN - OAuth access or refresh token.
+ * @property WEBHOOK_SECRET - Webhook signing secret.
+ * @property ENCRYPTION_KEY - General encryption key.
+ * @property TOKEN - General token that doesn't fit other categories.
  */
 enum SecretType {
   API_KEY
-  ENV_VARIABLE
   DATABASE_URL
   CLOUD_STORAGE_KEY
-  THIRD_PARTY_API_KEY
-  OTHER
+  SSH_KEY
+  JWT_SECRET
+  OAUTH_TOKEN
+  WEBHOOK_SECRET
+  ENCRYPTION_KEY
+  TOKEN
 }
 
 /**
@@ -22,14 +28,24 @@ enum SecretType {
  * @property EXPIRED - Card is expired.
  * @property INACTIVE - Card is inactive.
  * @property LOST - Card is lost.
- * @property STOLEN - Card is stolen.
+ * @property BLOCKED - Card is blocked.
+ * @property PENDING - Card is pending activation.
+ * @property CANCELLED - Card has been cancelled.
+ * @property FROZEN - Card is temporarily frozen by user.
+ * @property STOLEN - Card is reported stolen.
+ * @property SUSPENDED - Card is suspended by issuer.
  */
 enum CardStatus {
   ACTIVE
   EXPIRED
   INACTIVE
   LOST
+  BLOCKED
+  PENDING
+  CANCELLED
+  FROZEN
   STOLEN
+  SUSPENDED
 }
 
 /**
@@ -65,7 +81,6 @@ enum SecretStatus {
  * @property DINERS_CLUB - Diners Club card.
  * @property JCB - JCB card.
  * @property UNIONPAY - UnionPay card.
- * @property OTHER - Other types of card providers.
  */
 enum CardProvider {
   VISA
@@ -75,7 +90,6 @@ enum CardProvider {
   DINERS_CLUB
   JCB
   UNIONPAY
-  OTHER
 }
 
 /**
@@ -84,14 +98,14 @@ enum CardProvider {
  * @property CREDIT - Credit card.
  * @property VIRTUAL - Virtual card.
  * @property NATIONAL - National card.
- * @property OTHER - Other types of cards.
+ * @property PREPAID - Prepaid card.
  */
 enum CardType {
   DEBIT
   CREDIT
   VIRTUAL
   NATIONAL
-  OTHER
+  PREPAID
 }
 
 /**
@@ -104,4 +118,18 @@ enum PlatformStatus {
   APPROVED
   PENDING
   REJECTED
+}
+
+/**
+ * Represents the type of container and what entities it can hold.
+ * @property MIXED - Can contain any combination of secrets, credentials, and cards.
+ * @property SECRETS_ONLY - Can only contain secrets (enables env operations).
+ * @property CREDENTIALS_ONLY - Can only contain credentials.
+ * @property CARDS_ONLY - Can only contain cards.
+ */
+enum ContainerType {
+  MIXED
+  SECRETS_ONLY
+  CREDENTIALS_ONLY
+  CARDS_ONLY
 }
