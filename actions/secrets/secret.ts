@@ -16,7 +16,12 @@ import {
 } from "@/schemas/secrets/secret"
 import { type SecretMetadataDto } from "@/schemas/secrets/secret-metadata"
 import { EntityTypeEnum } from "@/schemas/utils"
-import { Prisma } from "@prisma/client"
+import {
+  ContainerDto,
+  containerDtoSchema,
+  ContainerSimpleRo,
+} from "@/schemas/utils/container"
+import { Prisma, SecretStatus, SecretType } from "@prisma/client"
 import { z } from "zod"
 
 import { verifySession } from "@/lib/auth/verify"
@@ -125,9 +130,21 @@ export async function createSecret(data: SecretDto): Promise<{
 }> {
   try {
     const session = await verifySession()
-    const validatedData = secretDtoSchema.parse(data)
 
-    // Validate container type if containerId is provided
+    let validatedData: SecretDto
+    try {
+      validatedData = secretDtoSchema.parse(data)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return {
+          success: false,
+          error: "Validation failed",
+          issues: validationError.issues,
+        }
+      }
+      throw validationError
+    }
+
     if (validatedData.containerId) {
       const container = await database.container.findFirst({
         where: {
@@ -143,54 +160,83 @@ export async function createSecret(data: SecretDto): Promise<{
         }
       }
 
-      if (
-        !ContainerEntity.validateEntityForContainer(
-          container.type,
-          EntityTypeEnum.SECRET
-        )
-      ) {
+      const isValid = ContainerEntity.validateEntityForContainer(
+        container.type,
+        EntityTypeEnum.SECRET
+      )
+
+      if (!isValid) {
         return {
           success: false,
           error: `Cannot add secrets to ${container.type.toLowerCase().replace("_", " ")} container`,
         }
       }
+    } else {
+      console.log("No container ID provided")
+      return {
+        success: false,
+        error: "Container ID is required",
+      }
     }
 
-    // Create encrypted data for secret value
-    const valueEncryptionResult = await createEncryptedData({
-      encryptedValue: validatedData.valueEncryption.encryptedValue,
-      encryptionKey: validatedData.valueEncryption.encryptionKey,
-      iv: validatedData.valueEncryption.iv,
-    })
+    let valueEncryptionResult
+    try {
+      valueEncryptionResult = await createEncryptedData({
+        encryptedValue: validatedData.valueEncryption.encryptedValue,
+        encryptionKey: validatedData.valueEncryption.encryptionKey,
+        iv: validatedData.valueEncryption.iv,
+      })
 
-    if (
-      !valueEncryptionResult.success ||
-      !valueEncryptionResult.encryptedData
-    ) {
+      if (
+        !valueEncryptionResult.success ||
+        !valueEncryptionResult.encryptedData
+      ) {
+        console.log("Encryption failed:", valueEncryptionResult)
+        return {
+          success: false,
+          error: "Failed to encrypt secret value",
+        }
+      }
+
+      console.log("Encryption successful")
+    } catch (encryptionError) {
+      console.error("Encryption error:", encryptionError)
       return {
         success: false,
         error: "Failed to encrypt secret value",
       }
     }
 
-    const secret = await database.secret.create({
-      data: {
-        name: validatedData.name,
-        valueEncryptionId: valueEncryptionResult.encryptedData.id,
-        userId: session.user.id,
-        containerId: validatedData.containerId,
-        note: validatedData.note,
-      },
-      include: {
-        valueEncryption: true,
-      },
-    })
+    console.log("Creating secret in database")
+    try {
+      const secret = await database.secret.create({
+        data: {
+          name: validatedData.name,
+          valueEncryptionId: valueEncryptionResult.encryptedData.id,
+          userId: session.user.id,
+          containerId: validatedData.containerId,
+          note: validatedData.note,
+        },
+        include: {
+          valueEncryption: true,
+        },
+      })
 
-    return {
-      success: true,
-      secret: SecretEntity.getSimpleRo(secret),
+      console.log("Secret created successfully")
+      return {
+        success: true,
+        secret: SecretEntity.getSimpleRo(secret),
+      }
+    } catch (dbError) {
+      console.error("Database error:", dbError)
+      return {
+        success: false,
+        error: "Failed to create secret in database",
+      }
     }
   } catch (error) {
+    console.error("Secret creation error details:", error)
+
     if (error instanceof Error && error.message === "Not authenticated") {
       return {
         success: false,
@@ -198,6 +244,7 @@ export async function createSecret(data: SecretDto): Promise<{
       }
     }
     if (error instanceof z.ZodError) {
+      console.log("Validation error:", error.issues)
       return {
         success: false,
         error: "Validation failed",
@@ -699,6 +746,112 @@ export const env = createEnv({
       }
     }
     console.error("Generate T3 env file error:", error)
+    return {
+      success: false,
+      error: "Something went wrong. Please try again.",
+    }
+  }
+}
+
+/**
+ * Create a container with multiple secrets in a single transaction
+ */
+export async function createContainerWithSecrets(data: {
+  container: ContainerDto
+  secrets: Array<
+    Omit<SecretDto, "containerId" | "metadata"> & {
+      valueEncryption: {
+        encryptedValue: string
+        iv: string
+        encryptionKey: string
+      }
+    }
+  >
+}): Promise<{
+  success: boolean
+  container?: ContainerSimpleRo
+  secrets?: SecretSimpleRo[]
+  error?: string
+  issues?: z.ZodIssue[]
+}> {
+  try {
+    const session = await verifySession()
+
+    const validatedContainer = containerDtoSchema.parse(data.container)
+
+    return await database.$transaction(async (tx) => {
+      const container = await tx.container.create({
+        data: {
+          name: validatedContainer.name,
+          icon: validatedContainer.icon,
+          description: validatedContainer.description,
+          type: validatedContainer.type,
+          userId: session.user.id,
+          ...(validatedContainer.tags.length > 0 && {
+            tags: {
+              create: validatedContainer.tags,
+            },
+          }),
+        },
+      })
+
+      const secrets = await Promise.all(
+        data.secrets.map(async (secret) => {
+          const valueEncryption = await tx.encryptedData.create({
+            data: {
+              encryptedValue: secret.valueEncryption.encryptedValue,
+              iv: secret.valueEncryption.iv,
+              encryptionKey: secret.valueEncryption.encryptionKey,
+            },
+          })
+
+          return tx.secret.create({
+            data: {
+              name: secret.name,
+              note: secret.note,
+              valueEncryptionId: valueEncryption.id,
+              userId: session.user.id,
+              containerId: container.id,
+              metadata: {
+                create: [
+                  {
+                    type: SecretType.API_KEY,
+                    status: SecretStatus.ACTIVE,
+                    otherInfo: [],
+                  },
+                ],
+              },
+            },
+            include: {
+              valueEncryption: true,
+            },
+          })
+        })
+      )
+
+      return {
+        success: true,
+        container: ContainerEntity.getSimpleRo(container),
+        secrets: secrets.map((secret) => SecretEntity.getSimpleRo(secret)),
+      }
+    })
+  } catch (error) {
+    console.error("Create container with secrets error:", error)
+
+    if (error instanceof Error && error.message === "Not authenticated") {
+      return {
+        success: false,
+        error: "Not authenticated",
+      }
+    }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        issues: error.issues,
+      }
+    }
+
     return {
       success: false,
       error: "Something went wrong. Please try again.",
