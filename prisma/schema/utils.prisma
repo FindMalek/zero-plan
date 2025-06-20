@@ -36,6 +36,7 @@ model Platform {
   user   User?   @relation(fields: [userId], references: [id])
 
   @@index([userId])
+  @@map("platform")
 }
 
 /**
@@ -64,6 +65,7 @@ model Tag {
 
   @@index([userId])
   @@index([containerId])
+  @@map("tag")
 }
 
 /**
@@ -105,4 +107,5 @@ model Container {
 
   @@index([userId])
   @@index([type])
+  @@map("container")
 }

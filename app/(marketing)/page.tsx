@@ -1,3 +1,5 @@
+import { createServerClient } from "@/orpc/client/server"
+
 import { MarketingFooter } from "@/components/app/marketing-footer"
 import { MarketingHeaderDesktop } from "@/components/app/marketing-header-desktop"
 import { MarketingHeaderMobile } from "@/components/app/marketing-header-mobile"
@@ -5,16 +7,34 @@ import { MarketingWaitlistForm } from "@/components/app/marketing-waitlist-form"
 import { StatCard } from "@/components/shared/stat-card"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 
-import { listEncryptedDataCount } from "@/actions/encryption"
-import { listUsers } from "@/actions/user/user"
-import { listWaitlist } from "@/actions/user/waitlist"
-
 export default async function Home() {
-  const [waitlist, users, encryptedData] = await Promise.all([
-    listWaitlist(),
-    listUsers(),
-    listEncryptedDataCount(),
-  ])
+  const serverClient = createServerClient({
+    session: null,
+    user: null,
+  })
+
+  let waitlist = { total: 0 }
+  let users = { total: 0 }
+  let encryptedData = { count: 0 }
+
+  try {
+    const [waitlistResult, usersResult, encryptedDataResult] =
+      await Promise.all([
+        serverClient.users.getWaitlistCount({}),
+        serverClient.users.getUserCount({}),
+        serverClient.users.getEncryptedDataCount({}),
+      ])
+
+    waitlist = waitlistResult
+    users = usersResult
+    encryptedData = encryptedDataResult
+  } catch (error) {
+    // Silently handle database connection errors during build
+    console.warn(
+      "Database not available during build, using default values:",
+      error
+    )
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col">
