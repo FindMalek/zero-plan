@@ -1,8 +1,8 @@
 ![hero](github.png)
 
-# FindAccount
+# Zero Locker
 
-FindAccount is a secure password management tool designed to store, retrieve, and manage account credentials and sensitive information efficiently. It provides a user-friendly platform with advanced features like password generation, secure storage, and easy migration from existing TXT files.
+Zero Locker is a secure password management tool designed to store, retrieve, and manage account credentials and sensitive information efficiently. It provides a user-friendly platform with advanced features like password generation, secure storage, and easy migration from existing TXT files.
 
 ## Features
 
@@ -28,8 +28,8 @@ FindAccount is a secure password management tool designed to store, retrieve, an
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/findmalek/findaccount.git
-   cd findaccount
+   git clone https://github.com/findmalek/zero-locker.git
+   cd zero-locker
    ```
 
 2. Install dependencies:
@@ -42,7 +42,7 @@ FindAccount is a secure password management tool designed to store, retrieve, an
    Create a `.env` file in the root directory and add your database URL and API keys:
 
    ```
-   DATABASE_URL=postgresql://your_username:your_password@localhost:5432/findaccount
+   DATABASE_URL=postgresql://your_username:your_password@localhost:5432/zero-locker
    ```
 
 4. Run Prisma migrations:

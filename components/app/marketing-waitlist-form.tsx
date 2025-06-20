@@ -1,11 +1,13 @@
 "use client"
 
+import Link from "next/link"
 import { useJoinWaitlist } from "@/orpc/hooks"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
 import { WaitlistUserDtoSchema, type WaitlistUserDto } from "@/config/schema"
+import { siteConfig } from "@/config/site"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -45,15 +47,7 @@ export function MarketingWaitlistForm({ count }: { count: number }) {
   }
 
   return (
-    <div className="w-full space-y-4">
-      <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:whitespace-nowrap lg:text-4xl xl:text-5xl">
-        Simple password management.
-      </h2>
-      <p className="text-secondary-foreground/70 text-lg">
-        Manage your passwords and sensitive information securely and
-        effortlessly.
-      </p>
-
+    <div className="space-y-4">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -69,6 +63,7 @@ export function MarketingWaitlistForm({ count }: { count: number }) {
                     type="email"
                     placeholder="Your email"
                     disabled={joinWaitlistMutation.isPending}
+                    className="min-w-sm"
                     {...field}
                   />
                 </FormControl>
@@ -86,6 +81,11 @@ export function MarketingWaitlistForm({ count }: { count: number }) {
               <Icons.spinner className="size-4 animate-spin" />
             )}{" "}
             Join Waitlist
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <Link href={siteConfig.links.github}>
+              <Icons.github />
+            </Link>
           </Button>
         </form>
         <div className="flex items-center gap-2">
