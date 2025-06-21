@@ -26,11 +26,7 @@ const transitionVariants: { item: Variants } = {
   },
 }
 
-interface MarketingHeroProps {
-  waitlistCount: number
-}
-
-export function MarketingHero({ waitlistCount }: MarketingHeroProps) {
+export function MarketingHero() {
   return (
     <section className="flex w-full flex-1 flex-col items-center justify-center gap-8 overflow-hidden px-4 py-16 sm:py-20 md:py-32 lg:gap-12">
       <AnimatedGroup variants={transitionVariants} className="w-full max-w-6xl">
@@ -43,7 +39,7 @@ export function MarketingHero({ waitlistCount }: MarketingHeroProps) {
               🏗️ Currently in Private Beta
             </Badge>
 
-            <h1 className="xs:text-3xl inline-flex flex-col items-center justify-center gap-1.5 text-2xl font-bold leading-tight sm:flex-row sm:items-baseline sm:gap-2.5 sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
+            <h1 className="xs:text-3xl inline-flex flex-col items-center justify-center gap-1.5 text-4xl font-bold leading-tight sm:flex-row sm:items-baseline sm:gap-2.5 sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
               <span className="text-center sm:text-left">The open source</span>
               <TextLoop
                 transition={{
@@ -76,11 +72,11 @@ export function MarketingHero({ waitlistCount }: MarketingHeroProps) {
                 {[
                   <Icons.lastPass
                     key="lastPass"
-                    className="xs:size-10 size-8 opacity-80 sm:size-12 md:size-16 lg:size-20"
+                    className="xs:size-10 size-12 opacity-80 sm:size-12 md:size-16 lg:size-20"
                   />,
                   <Icons.hashicorp
                     key="hashicorp"
-                    className="xs:size-10 size-8 opacity-80 sm:size-12 md:size-16 lg:size-20 dark:invert"
+                    className="xs:size-10 size-12 opacity-80 sm:size-12 md:size-16 lg:size-20 dark:invert"
                   />,
                 ]}
               </TextLoop>
@@ -92,7 +88,7 @@ export function MarketingHero({ waitlistCount }: MarketingHeroProps) {
             </p>
 
             <div className="w-full max-w-md sm:max-w-lg">
-              <MarketingWaitlistForm count={waitlistCount} />
+              <MarketingWaitlistForm />
             </div>
           </div>
         </div>

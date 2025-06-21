@@ -8,6 +8,7 @@ export const joinWaitlistInputSchema = z.object({
 export const joinWaitlistOutputSchema = z.object({
   success: z.boolean(),
   error: z.string().optional(),
+  position: z.number().int().min(1).optional(),
 })
 
 export const getWaitlistCountOutputSchema = z.object({

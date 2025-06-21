@@ -36,7 +36,8 @@ export function useWaitlistCount() {
   return useQuery({
     queryKey: userKeys.waitlistCount(),
     queryFn: () => orpc.users.getWaitlistCount.call({}),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds - more responsive for waitlist count
+    refetchOnWindowFocus: true, // Refetch when user returns to the page
   })
 }
 

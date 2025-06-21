@@ -49,7 +49,16 @@ export const joinWaitlist = publicProcedure
         },
       })
 
-      return { success: true }
+      // Get the user's position in the waitlist
+      const position = await database.waitlist.count({
+        where: {
+          createdAt: {
+            lte: new Date(), // Count all entries including the one we just created
+          },
+        },
+      })
+
+      return { success: true, position }
     } catch (error) {
       // Re-throw ORPC errors to let ORPC handle them
       if (error instanceof ORPCError) {

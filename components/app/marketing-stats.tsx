@@ -1,24 +1,26 @@
+"use client"
+
+import { useUserCount, useEncryptedDataCount } from "@/orpc/hooks"
+
 import { StatCard } from "@/components/shared/stat-card"
 
-interface MarketingStatsProps {
-  userCount: number
-  encryptedDataCount: number
-}
+export function MarketingStats() {
+  const { data: userData, isLoading: userLoading } = useUserCount()
+  const { data: encryptedData, isLoading: encryptedLoading } = useEncryptedDataCount()
 
-export function MarketingStats({
-  userCount,
-  encryptedDataCount,
-}: MarketingStatsProps) {
+  const userCount = userData?.total ?? 0
+  const encryptedDataCount = encryptedData?.count ?? 0
+
   return (
     <section className="w-full px-4 md:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="xs:grid-cols-2 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
           <StatCard
-            value={userCount?.toString() || "0"}
+            value={userLoading ? "..." : userCount.toString()}
             label="TRUSTED BY USERS"
           />
           <StatCard
-            value={encryptedDataCount?.toString() || "0"}
+            value={encryptedLoading ? "..." : encryptedDataCount.toString()}
             label="SECRETS PROTECTED"
           />
           <div className="xs:col-span-2 lg:col-span-1">

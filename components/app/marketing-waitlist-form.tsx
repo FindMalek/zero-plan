@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useJoinWaitlist } from "@/orpc/hooks"
+import { useJoinWaitlist, useWaitlistCount } from "@/orpc/hooks"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
+import { useState, useEffect } from "react"
 
 import { WaitlistUserDtoSchema, type WaitlistUserDto } from "@/config/schema"
 import { siteConfig } from "@/config/site"
@@ -20,8 +21,15 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-export function MarketingWaitlistForm({ count }: { count: number }) {
+export function MarketingWaitlistForm() {
   const joinWaitlistMutation = useJoinWaitlist()
+  const { data: waitlistData, isLoading } = useWaitlistCount()
+  
+  const [showPosition, setShowPosition] = useState(false)
+  const [userPosition, setUserPosition] = useState<number | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  
+  const displayCount = waitlistData?.total ?? 0
 
   const form = useForm<WaitlistUserDto>({
     resolver: zodResolver(WaitlistUserDtoSchema),
@@ -30,12 +38,35 @@ export function MarketingWaitlistForm({ count }: { count: number }) {
     },
   })
 
+  // Handle transition back to total count
+  useEffect(() => {
+    if (showPosition && userPosition) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(true)
+        setTimeout(() => {
+          setShowPosition(false)
+          setUserPosition(null)
+          setIsTransitioning(false)
+        }, 300) // Wait for fade out animation
+      }, 3000) // Show position for 3 seconds
+
+      return () => clearTimeout(timer)
+    }
+  }, [showPosition, userPosition])
+
   async function onSubmit(values: WaitlistUserDto) {
     joinWaitlistMutation.mutate(values, {
       onSuccess: (result) => {
         if (result.success) {
           toast.success("You've been added to our waitlist.")
           form.reset()
+          
+          // Show user's position
+          if (result.position) {
+            setUserPosition(result.position)
+            setShowPosition(true)
+            setIsTransitioning(false)
+          }
         } else {
           toast.error(result.error || "Something went wrong")
         }
@@ -44,6 +75,16 @@ export function MarketingWaitlistForm({ count }: { count: number }) {
         toast.error("Something went wrong. Please try again.")
       },
     })
+  }
+
+  const getDisplayText = () => {
+    if (isLoading) return "Loading..."
+    
+    if (showPosition && userPosition) {
+      return `You are number ${userPosition} in the waitlist!`
+    }
+    
+    return `${displayCount} people have joined the waitlist`
   }
 
   return (
@@ -82,16 +123,21 @@ export function MarketingWaitlistForm({ count }: { count: number }) {
             )}{" "}
             Join Waitlist
           </Button>
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="secondary" size="lg" asChild>
             <Link href={siteConfig.links.github}>
               <Icons.github />
+              <span className="sm:hidden">Star us on GitHub</span>
             </Link>
           </Button>
         </form>
         <div className="flex items-center gap-2">
           <div className="bg-success/70 animate-pulse rounded-full p-1" />
-          <p className="text-success/70 text-sm">
-            {count} people have joined the waitlist
+          <p 
+            className={`text-success/70 text-sm transition-opacity duration-300 ${
+              isTransitioning ? 'opacity-0' : 'opacity-100'
+            }`}
+          >
+            {getDisplayText()}
           </p>
         </div>
       </Form>
