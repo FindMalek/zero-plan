@@ -1,135 +1,73 @@
-/**
- * Represents the types of secrets that can be stored.
- * @property API_KEY - API key.
- * @property DATABASE_URL - Database URL.
- * @property CLOUD_STORAGE_KEY - Cloud storage key.
- * @property SSH_KEY - SSH private key for server access.
- * @property JWT_SECRET - JWT signing secret.
- * @property OAUTH_TOKEN - OAuth access or refresh token.
- * @property WEBHOOK_SECRET - Webhook signing secret.
- * @property ENCRYPTION_KEY - General encryption key.
- * @property TOKEN - General token that doesn't fit other categories.
- */
-enum SecretType {
-  API_KEY
-  DATABASE_URL
-  CLOUD_STORAGE_KEY
-  SSH_KEY
-  JWT_SECRET
-  OAUTH_TOKEN
-  WEBHOOK_SECRET
-  ENCRYPTION_KEY
-  TOKEN
-}
+
 
 /**
- * Represents the status of a card.
- * @property ACTIVE - Card is active.
- * @property EXPIRED - Card is expired.
- * @property INACTIVE - Card is inactive.
- * @property LOST - Card is lost.
- * @property BLOCKED - Card is blocked.
- * @property PENDING - Card is pending activation.
- * @property CANCELLED - Card has been cancelled.
- * @property FROZEN - Card is temporarily frozen by user.
- * @property STOLEN - Card is reported stolen.
- * @property SUSPENDED - Card is suspended by issuer.
+ * Represents the status of an event.
+ * @property PLANNED - Event is planned but not started.
+ * @property IN_PROGRESS - Event is currently happening.
+ * @property COMPLETED - Event has been completed.
+ * @property CANCELLED - Event has been cancelled.
+ * @property POSTPONED - Event has been postponed.
  */
-enum CardStatus {
-  ACTIVE
-  EXPIRED
-  INACTIVE
-  LOST
-  BLOCKED
-  PENDING
+enum EventStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
   CANCELLED
-  FROZEN
-  STOLEN
-  SUSPENDED
+  POSTPONED
 }
 
 /**
- * Represents the status of an account.
- * @property ACTIVE - Account is active.
- * @property SUSPENDED - Account is suspended.
- * @property DELETED - Account is deleted.
+ * Represents the priority level of an event.
+ * @property LOW - Low priority event.
+ * @property MEDIUM - Medium priority event.
+ * @property HIGH - High priority event.
+ * @property URGENT - Urgent priority event.
  */
-enum AccountStatus {
-  ACTIVE
-  SUSPENDED
-  DELETED
+enum EventPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 /**
- * Represents the status of a secret.
- * @property ACTIVE - Secret is active.
- * @property EXPIRED - Secret is expired.
- * @property REVOKED - Secret is revoked.
+ * Represents the category of an event.
+ * @property PERSONAL - Personal event.
+ * @property WORK - Work-related event.
+ * @property MEETING - Meeting event.
+ * @property APPOINTMENT - Appointment event.
+ * @property REMINDER - Reminder event.
+ * @property SOCIAL - Social event.
+ * @property TRAVEL - Travel-related event.
+ * @property HEALTH - Health-related event.
+ * @property EDUCATION - Education-related event.
+ * @property OTHER - Other category.
  */
-enum SecretStatus {
-  ACTIVE
-  EXPIRED
-  REVOKED
+enum EventCategory {
+  PERSONAL
+  WORK
+  MEETING
+  APPOINTMENT
+  REMINDER
+  SOCIAL
+  TRAVEL
+  HEALTH
+  EDUCATION
+  OTHER
 }
 
 /**
- * Represents the providers of cards.
- * @property VISA - Visa card.
- * @property MASTERCARD - Mastercard.
- * @property AMEX - American Express card.
- * @property DISCOVER - Discover card.
- * @property DINERS_CLUB - Diners Club card.
- * @property JCB - JCB card.
- * @property UNIONPAY - UnionPay card.
+ * Represents the status of AI processing for an event.
+ * @property PENDING - AI processing is pending.
+ * @property PROCESSING - AI is currently processing.
+ * @property COMPLETED - AI processing is completed.
+ * @property FAILED - AI processing failed.
+ * @property RETRY - AI processing needs retry.
  */
-enum CardProvider {
-  VISA
-  MASTERCARD
-  AMEX
-  DISCOVER
-  DINERS_CLUB
-  JCB
-  UNIONPAY
-}
-
-/**
- * Represents the types of cards.
- * @property DEBIT - Debit card.
- * @property CREDIT - Credit card.
- * @property VIRTUAL - Virtual card.
- * @property NATIONAL - National card.
- * @property PREPAID - Prepaid card.
- */
-enum CardType {
-  DEBIT
-  CREDIT
-  VIRTUAL
-  NATIONAL
-  PREPAID
-}
-
-/**
- * Represents the status of a platform.
- * @property APPROVED - Platform is approved.
- * @property PENDING - Platform is pending approval.
- * @property REJECTED - Platform is rejected.
- */
-enum PlatformStatus {
-  APPROVED
+enum AIProcessingStatus {
   PENDING
-  REJECTED
-}
-
-/**
- * Represents the type of container and what entities it can hold.
- * @property MIXED - Can contain any combination of secrets, credentials, and cards.
- * @property SECRETS_ONLY - Can only contain secrets (enables env operations).
- * @property CREDENTIALS_ONLY - Can only contain credentials.
- * @property CARDS_ONLY - Can only contain cards.
- */
-enum ContainerType {
-  MIXED
-  SECRETS_ONLY
-  CREDENTIALS_ONLY
-  CARDS_ONLY
+  PROCESSING
+  COMPLETED
+  FAILED
+  RETRY
 }

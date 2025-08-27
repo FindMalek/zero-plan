@@ -1,0 +1,63 @@
+model Event {
+  id String @id @default(uuid())
+
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  location    String?
+  
+  status      EventStatus   @default(PLANNED)
+  priority    EventPriority @default(MEDIUM)
+  category    EventCategory @default(PERSONAL)
+  
+  // AI processed fields
+  originalInput String? // Store the original user input
+  aiProcessed   Boolean @default(false)
+  aiConfidence  Float?  // AI processing confidence score (0-1)
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  eventAI EventAI[]
+
+  @@index([userId])
+  @@index([startTime])
+  @@index([status])
+  @@index([category])
+  @@map("event")
+}
+
+model EventAI {
+  id String @id @default(uuid())
+  
+  // AI processing data
+  rawInput        String
+  processedOutput Json
+  model           String  // AI model used (e.g., "gpt-4", "claude-3")
+  provider        String  // AI provider (e.g., "openai", "anthropic")
+  
+  // Processing metadata
+  processingTime  Int?    // Time taken in milliseconds
+  tokens          Int?    // Tokens used
+  confidence      Float?  // Confidence score (0-1)
+  
+  // Status and timestamps
+  status     AIProcessingStatus @default(PENDING)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  
+  // Relations
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("event_ai")
+}

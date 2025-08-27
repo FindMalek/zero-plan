@@ -12,14 +12,7 @@ model User {
 
   sessions Session[]
   accounts Account[]
-
-  tags                Tag[]
-  cards               Card[]
-  secrets             Secret[]
-  platforms           Platform[]
-  containers          Container[]
-  credentials         Credential[]
-  credentialHistories CredentialHistory[]
+  events   Event[]
 
   @@unique([email])
   @@map("user")
