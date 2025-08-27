@@ -1,0 +1,49 @@
+/**
+ * Represents a user input processing session.
+ * @param id Unique identifier for the processing session
+ * @param userInput Original user input in natural language
+ * @param processedOutput Structured output from processing (JSON format)
+ * @param model Model used for processing (e.g., "gpt-4", "claude-3")
+ * @param provider Provider (e.g., "openai", "anthropic")
+ * @param processingTimeMs Time taken for processing in milliseconds
+ * @param tokensUsed Number of tokens used in the request
+ * @param confidence Confidence score for the extraction (0-1)
+ * @param status Current status of the processing
+ * @param errorMessage Error message if processing failed
+ * @param createdAt Timestamp when processing started
+ * @param updatedAt Timestamp when processing was last updated
+ * @param eventId Foreign key to the event that was created/updated from this session
+ * @param event Relationship to the Event model (nullable for failed processing)
+ * @param userId Foreign key to the user who initiated the processing
+ * @param user Relationship to the User model
+ */
+model InputProcessingSession {
+  id String @id @default(uuid())
+
+  userInput String
+  processedOutput Json
+  model String
+  provider String
+
+  processingTimeMs Int?
+  tokensUsed Int?
+  confidence Float?
+
+  status ProcessingStatus @default(PENDING)
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  eventId String?
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("input_processing_session")
+}

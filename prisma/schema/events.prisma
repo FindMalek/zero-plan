@@ -1,63 +1,126 @@
+/**
+ * Represents an event in the calendar system.
+ * @param id Unique identifier for the event
+ * @param emoji Display emoji for the event (e.g., "📅", "💼", "🎓")
+ * @param title Title/name of the event
+ * @param description Detailed description of the event
+ * @param startTime Date and time when the event starts
+ * @param endTime Date and time when the event ends (optional for all-day events)
+ * @param timezone Timezone for the event
+ * @param isAllDay Whether this is an all-day event
+ * @param location Physical or virtual location of the event
+ * @param meetingRoom Conference/meeting room details
+ * @param conferenceLink Video conferencing link (Zoom, Meet, Teams, etc.)
+ * @param conferenceId Conference ID or meeting ID
+ * @param participantEmails List of participant email addresses (String array)
+ * @param maxParticipants Maximum number of participants allowed
+ * @param links Links related to the event (String array of objects with title and url)
+ * @param documents Attached documents (String array of objects with filename and url)
+ * @param aiConfidence AI confidence score for event extraction (0-1)
+ * @param createdAt Timestamp when the event was created
+ * @param updatedAt Timestamp when the event was last updated
+ * @param userId Foreign key to the user who owns this event
+ * @param user Relationship to the User model
+ * @param calendarId Foreign key to the calendar this event belongs to
+ * @param calendar Relationship to the Calendar model
+ * @param recurrence Recurrence rules for this event
+ * @param reminders Reminders set for this event
+ * @param processingSessions Processing sessions for this event
+ */
 model Event {
   id String @id @default(uuid())
 
-  title       String
+  emoji String @default("📅")
+  title String
   description String?
-  startTime   DateTime
-  endTime     DateTime?
-  location    String?
-  
-  status      EventStatus   @default(PLANNED)
-  priority    EventPriority @default(MEDIUM)
-  category    EventCategory @default(PERSONAL)
-  
-  // AI processed fields
-  originalInput String? // Store the original user input
-  aiProcessed   Boolean @default(false)
-  aiConfidence  Float?  // AI processing confidence score (0-1)
-  
-  // Metadata
+
+  startTime DateTime
+  endTime DateTime?
+  timezone Timezone @default(UTC)
+  isAllDay Boolean @default(false)
+
+  location String?
+  meetingRoom String?
+  conferenceLink String?
+  conferenceId String?
+
+  participantEmails String[] 
+  maxParticipants Int?
+
+  links String[]
+  documents String[] 
+
+  aiConfidence Float?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // Relations
+
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  eventAI EventAI[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  calendarId String
+  calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+
+  recurrence EventRecurrence?
+  reminders EventReminder[]
+  inputProcessingSessions InputProcessingSession[]
 
   @@index([userId])
+  @@index([calendarId])
   @@index([startTime])
-  @@index([status])
-  @@index([category])
   @@map("event")
 }
 
-model EventAI {
+/**
+ * Represents recurrence rules for an event.
+ * @param id Unique identifier for the recurrence rule
+ * @param pattern How often the event repeats
+ * @param endDate End date for recurring events (when to stop repeating)
+ * @param customRule Custom repeat rule for complex patterns (JSON format)
+ * @param createdAt Timestamp when the recurrence was created
+ * @param updatedAt Timestamp when the recurrence was last updated
+ * @param eventId Foreign key to the event this recurrence belongs to
+ * @param event Relationship to the Event model
+ */
+model EventRecurrence {
   id String @id @default(uuid())
-  
-  // AI processing data
-  rawInput        String
-  processedOutput Json
-  model           String  // AI model used (e.g., "gpt-4", "claude-3")
-  provider        String  // AI provider (e.g., "openai", "anthropic")
-  
-  // Processing metadata
-  processingTime  Int?    // Time taken in milliseconds
-  tokens          Int?    // Tokens used
-  confidence      Float?  // Confidence score (0-1)
-  
-  // Status and timestamps
-  status     AIProcessingStatus @default(PENDING)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  
-  // Relations
+
+  pattern RepeatPattern @default(NONE)
+  endDate DateTime?
+  customRule Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  eventId String @unique
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([pattern])
+  @@map("event_recurrence")
+}
+
+/**
+ * Represents a reminder for an event.
+ * @param id Unique identifier for the reminder
+ * @param value How many units before the event to send the reminder
+ * @param unit Time unit for the reminder (minutes, hours, days, weeks)
+ * @param createdAt Timestamp when the reminder was created
+ * @param updatedAt Timestamp when the reminder was last updated
+ * @param eventId Foreign key to the event this reminder is for
+ * @param event Relationship to the Event model
+ */
+model EventReminder {
+  id String @id @default(uuid())
+
+  value Int
+  unit ReminderUnit
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
-  @@index([status])
-  @@index([createdAt])
-  @@map("event_ai")
+  @@map("event_reminder")
 }

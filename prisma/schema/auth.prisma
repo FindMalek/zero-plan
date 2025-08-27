@@ -1,8 +1,23 @@
+/**
+ * Represents a user in the system.
+ * @param id Unique identifier for the user
+ * @param name Full name of the user
+ * @param email Email address of the user (must be unique)
+ * @param emailVerified Whether the user's email has been verified
+ * @param image Optional profile image URL
+ * @param createdAt Timestamp when the user account was created
+ * @param updatedAt Timestamp when the user account was last updated
+ * @param sessions User's authentication sessions
+ * @param accounts User's authentication accounts (OAuth, etc.)
+ * @param calendars User's calendars
+ * @param events User's events
+ * @param processingSessions User's input processing sessions
+ */
 model User {
   id String @id
 
-  name          String
-  email         String
+  name String
+  email String
   emailVerified Boolean
 
   image String?
@@ -12,12 +27,26 @@ model User {
 
   sessions Session[]
   accounts Account[]
-  events   Event[]
+  calendars Calendar[]
+  events Event[]
+  inputProcessingSessions InputProcessingSession[]
 
   @@unique([email])
   @@map("user")
 }
 
+/**
+ * Represents an active user session.
+ * @param id Unique identifier for the session
+ * @param token Session token used for authentication
+ * @param ipAddress IP address from which the session was created
+ * @param userAgent User agent string of the client device
+ * @param expiresAt When the session expires and becomes invalid
+ * @param createdAt Timestamp when the session was created
+ * @param updatedAt Timestamp when the session was last updated
+ * @param userId Foreign key to the user who owns this session
+ * @param user Relationship to the User model
+ */
 model Session {
   id String @id
 
@@ -31,41 +60,67 @@ model Session {
   updatedAt DateTime
 
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
   @@map("session")
 }
 
+/**
+ * Represents a user's authentication account.
+ * @param id Unique identifier for the account
+ * @param accountId Account ID from the authentication provider
+ * @param providerId Provider identifier (e.g., "google", "github", "credentials")
+ * @param accessToken OAuth access token (if applicable)
+ * @param refreshToken OAuth refresh token (if applicable)
+ * @param idToken OpenID Connect ID token (if applicable)
+ * @param scope OAuth scope permissions (if applicable)
+ * @param password Hashed password for local authentication (if applicable)
+ * @param accessTokenExpiresAt When the access token expires (if applicable)
+ * @param refreshTokenExpiresAt When the refresh token expires (if applicable)
+ * @param createdAt Timestamp when the account was created
+ * @param updatedAt Timestamp when the account was last updated
+ * @param userId Foreign key to the user who owns this account
+ * @param user Relationship to the User model
+ */
 model Account {
   id String @id
 
-  accountId  String
+  accountId String
   providerId String
 
-  accessToken  String?
+  accessToken String?
   refreshToken String?
-  idToken      String?
-  scope        String?
-  password     String?
+  idToken String?
+  scope String?
+  password String?
 
-  accessTokenExpiresAt  DateTime?
+  accessTokenExpiresAt DateTime?
   refreshTokenExpiresAt DateTime?
 
   createdAt DateTime
   updatedAt DateTime
 
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
 
+/**
+ * Represents a verification token or code.
+ * @param id Unique identifier for the verification
+ * @param identifier Identifier for what is being verified (usually email address)
+ * @param value Verification token or code
+ * @param createdAt Timestamp when the verification was created
+ * @param updatedAt Timestamp when the verification was last updated
+ * @param expiresAt When the verification token expires
+ */
 model Verification {
   id String @id
 
   identifier String
-  value      String
+  value String
 
   createdAt DateTime?
   updatedAt DateTime?
@@ -75,12 +130,22 @@ model Verification {
   @@map("verification")
 }
 
+/**
+ * Represents a user on the waitlist.
+ * @param id Unique identifier for the waitlist entry
+ * @param email Email address of the person joining the waitlist
+ * @param country Country where the user is located (optional)
+ * @param city City where the user is located (optional)
+ * @param ipAddress IP address when they joined the waitlist
+ * @param userAgent User agent string of their browser/device
+ * @param createdAt Timestamp when they joined the waitlist
+ */
 model Waitlist {
-  id    String @id @default(uuid())
+  id String @id @default(uuid())
   email String @unique
 
-  country   String?
-  city      String?
+  country String?
+  city String?
   ipAddress String?
   userAgent String?
 

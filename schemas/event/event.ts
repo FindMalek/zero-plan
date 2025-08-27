@@ -1,77 +1,85 @@
 import { z } from "zod"
 
-// Event Status Enum
-export const eventStatusEnum = {
-  PLANNED: "PLANNED",
-  IN_PROGRESS: "IN_PROGRESS", 
-  COMPLETED: "COMPLETED",
-  CANCELLED: "CANCELLED",
-  POSTPONED: "POSTPONED",
+// Repeat Pattern Enum
+export const repeatPatternEnum = {
+  NONE: "NONE",
+  DAILY: "DAILY",
+  WEEKLY: "WEEKLY",
+  BIWEEKLY: "BIWEEKLY",
+  MONTHLY: "MONTHLY",
+  YEARLY: "YEARLY",
+  CUSTOM: "CUSTOM",
 } as const
 
-export const eventStatusSchema = z.enum(["PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "POSTPONED"])
-export type EventStatusInfer = z.infer<typeof eventStatusSchema>
+export const repeatPatternSchema = z.enum(["NONE", "DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY", "YEARLY", "CUSTOM"])
+export type RepeatPatternInfer = z.infer<typeof repeatPatternSchema>
 
-// Event Priority Enum
-export const eventPriorityEnum = {
-  LOW: "LOW",
-  MEDIUM: "MEDIUM",
-  HIGH: "HIGH", 
-  URGENT: "URGENT",
+// Timezone Enum
+export const timezoneEnum = {
+  UTC: "UTC",
+  AMERICA_NEW_YORK: "AMERICA_NEW_YORK",
+  AMERICA_CHICAGO: "AMERICA_CHICAGO",
+  AMERICA_DENVER: "AMERICA_DENVER",
+  AMERICA_LOS_ANGELES: "AMERICA_LOS_ANGELES",
+  EUROPE_LONDON: "EUROPE_LONDON",
+  EUROPE_PARIS: "EUROPE_PARIS",
+  EUROPE_BERLIN: "EUROPE_BERLIN",
+  ASIA_TOKYO: "ASIA_TOKYO",
+  ASIA_SINGAPORE: "ASIA_SINGAPORE",
+  ASIA_DUBAI: "ASIA_DUBAI",
+  AUSTRALIA_SYDNEY: "AUSTRALIA_SYDNEY",
 } as const
 
-export const eventPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"])
-export type EventPriorityInfer = z.infer<typeof eventPrioritySchema>
-
-// Event Category Enum
-export const eventCategoryEnum = {
-  PERSONAL: "PERSONAL",
-  WORK: "WORK",
-  MEETING: "MEETING",
-  APPOINTMENT: "APPOINTMENT",
-  REMINDER: "REMINDER",
-  SOCIAL: "SOCIAL",
-  TRAVEL: "TRAVEL",
-  HEALTH: "HEALTH",
-  EDUCATION: "EDUCATION",
-  OTHER: "OTHER",
-} as const
-
-export const eventCategorySchema = z.enum([
-  "PERSONAL", "WORK", "MEETING", "APPOINTMENT", "REMINDER", 
-  "SOCIAL", "TRAVEL", "HEALTH", "EDUCATION", "OTHER"
+export const timezoneSchema = z.enum([
+  "UTC",
+  "AMERICA_NEW_YORK",
+  "AMERICA_CHICAGO", 
+  "AMERICA_DENVER",
+  "AMERICA_LOS_ANGELES",
+  "EUROPE_LONDON",
+  "EUROPE_PARIS",
+  "EUROPE_BERLIN",
+  "ASIA_TOKYO",
+  "ASIA_SINGAPORE",
+  "ASIA_DUBAI",
+  "AUSTRALIA_SYDNEY"
 ])
-export type EventCategoryInfer = z.infer<typeof eventCategorySchema>
+export type TimezoneInfer = z.infer<typeof timezoneSchema>
 
-// AI Processing Status Enum
-export const aiProcessingStatusEnum = {
-  PENDING: "PENDING",
-  PROCESSING: "PROCESSING",
-  COMPLETED: "COMPLETED",
-  FAILED: "FAILED",
-  RETRY: "RETRY",
+// Reminder Unit Enum
+export const reminderUnitEnum = {
+  MINUTES: "MINUTES",
+  HOURS: "HOURS",
+  DAYS: "DAYS",
+  WEEKS: "WEEKS",
 } as const
 
-export const aiProcessingStatusSchema = z.enum(["PENDING", "PROCESSING", "COMPLETED", "FAILED", "RETRY"])
-export type AIProcessingStatusInfer = z.infer<typeof aiProcessingStatusSchema>
+export const reminderUnitSchema = z.enum(["MINUTES", "HOURS", "DAYS", "WEEKS"])
+export type ReminderUnitInfer = z.infer<typeof reminderUnitSchema>
 
 // Event Schema
 export const eventSchema = z.object({
   id: z.string().uuid(),
+  emoji: z.string().min(1, "Emoji is required").default("📅"),
   title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
   description: z.string().max(1000, "Description must be less than 1000 characters").optional(),
   startTime: z.date(),
   endTime: z.date().optional(),
+  timezone: timezoneSchema.default("UTC"),
+  isAllDay: z.boolean().default(false),
   location: z.string().max(500, "Location must be less than 500 characters").optional(),
-  status: eventStatusSchema.default("PLANNED"),
-  priority: eventPrioritySchema.default("MEDIUM"),
-  category: eventCategorySchema.default("PERSONAL"),
-  originalInput: z.string().optional(),
-  aiProcessed: z.boolean().default(false),
+  meetingRoom: z.string().max(200, "Meeting room must be less than 200 characters").optional(),
+  conferenceLink: z.string().url("Conference link must be a valid URL").optional(),
+  conferenceId: z.string().max(100, "Conference ID must be less than 100 characters").optional(),
+  participantEmails: z.array(z.string().email()).optional(),
+  maxParticipants: z.number().int().positive().optional(),
+  links: z.array(z.string().url()).optional(),
+  documents: z.array(z.string().url()).optional(),
   aiConfidence: z.number().min(0).max(1).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   userId: z.string().uuid(),
+  calendarId: z.string().uuid(),
 })
 
 export type EventInfer = z.infer<typeof eventSchema>
@@ -79,56 +87,53 @@ export type EventInfer = z.infer<typeof eventSchema>
 // Event Simple Response Object
 export const eventSimpleRoSchema = z.object({
   id: z.string().uuid(),
+  emoji: z.string(),
   title: z.string(),
   description: z.string().optional(),
   startTime: z.date(),
   endTime: z.date().optional(),
+  timezone: timezoneSchema,
+  isAllDay: z.boolean(),
   location: z.string().optional(),
-  status: eventStatusSchema,
-  priority: eventPrioritySchema,
-  category: eventCategorySchema,
-  originalInput: z.string().optional(),
-  aiProcessed: z.boolean(),
+  meetingRoom: z.string().optional(),
+  conferenceLink: z.string().optional(),
+  conferenceId: z.string().optional(),
+  participantEmails: z.array(z.string()).optional(),
+  maxParticipants: z.number().optional(),
+  links: z.array(z.string()).optional(),
+  documents: z.array(z.string()).optional(),
   aiConfidence: z.number().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   userId: z.string(),
+  calendarId: z.string(),
 })
 
 export type EventSimpleRo = z.infer<typeof eventSimpleRoSchema>
 
-// Event AI Schema
-export const eventAISchema = z.object({
+// Event Recurrence Schema
+export const eventRecurrenceSchema = z.object({
   id: z.string().uuid(),
-  rawInput: z.string(),
-  processedOutput: z.record(z.any()), // JSON object
-  model: z.string(),
-  provider: z.string(),
-  processingTime: z.number().optional(),
-
-  confidence: z.number().min(0).max(1).optional(),
-  status: aiProcessingStatusSchema.default("PENDING"),
+  pattern: repeatPatternSchema.default("NONE"),
+  endDate: z.date().optional(),
+  customRule: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   eventId: z.string().uuid(),
 })
 
-export type EventAIInfer = z.infer<typeof eventAISchema>
+export type EventRecurrenceInfer = z.infer<typeof eventRecurrenceSchema>
 
-// Event AI Simple Response Object
-export const eventAISimpleRoSchema = z.object({
+// Event Reminder Schema
+export const eventReminderSchema = z.object({
   id: z.string().uuid(),
-  rawInput: z.string(),
-  processedOutput: z.record(z.any()),
-  model: z.string(),
-  provider: z.string(),
-  processingTime: z.number().optional(),
-
-  confidence: z.number().optional(),
-  status: aiProcessingStatusSchema,
+  value: z.number().int().positive(),
+  unit: reminderUnitSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
-  eventId: z.string(),
+  eventId: z.string().uuid(),
 })
 
-export type EventAISimpleRo = z.infer<typeof eventAISimpleRoSchema>
+export type EventReminderInfer = z.infer<typeof eventReminderSchema>
+
+

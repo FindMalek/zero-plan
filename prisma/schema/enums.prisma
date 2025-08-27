@@ -1,70 +1,77 @@
 
-
 /**
- * Represents the status of an event.
- * @property PLANNED - Event is planned but not started.
- * @property IN_PROGRESS - Event is currently happening.
- * @property COMPLETED - Event has been completed.
- * @property CANCELLED - Event has been cancelled.
- * @property POSTPONED - Event has been postponed.
+ * Represents different repeat patterns for recurring events.
+ * @param NONE Event does not repeat (one-time event)
+ * @param DAILY Event repeats every day
+ * @param WEEKLY Event repeats every week
+ * @param BIWEEKLY Event repeats every two weeks
+ * @param MONTHLY Event repeats every month
+ * @param YEARLY Event repeats every year
+ * @param CUSTOM Custom repeat pattern defined by user
  */
-enum EventStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  POSTPONED
+enum RepeatPattern {
+  NONE
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
 }
 
 /**
- * Represents the priority level of an event.
- * @property LOW - Low priority event.
- * @property MEDIUM - Medium priority event.
- * @property HIGH - High priority event.
- * @property URGENT - Urgent priority event.
+ * Represents common timezones for events.
+ * @param UTC Coordinated Universal Time
+ * @param AMERICA_NEW_YORK Eastern Time (US & Canada)
+ * @param AMERICA_CHICAGO Central Time (US & Canada)
+ * @param AMERICA_DENVER Mountain Time (US & Canada)
+ * @param AMERICA_LOS_ANGELES Pacific Time (US & Canada)
+ * @param EUROPE_LONDON British Time
+ * @param EUROPE_PARIS Central European Time
+ * @param EUROPE_BERLIN Central European Time
+ * @param ASIA_TOKYO Japan Standard Time
+ * @param ASIA_SINGAPORE Singapore Standard Time
+ * @param ASIA_DUBAI Gulf Standard Time
+ * @param AUSTRALIA_SYDNEY Australian Eastern Time
  */
-enum EventPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
+enum Timezone {
+  UTC
+  AMERICA_NEW_YORK
+  AMERICA_CHICAGO
+  AMERICA_DENVER
+  AMERICA_LOS_ANGELES
+  EUROPE_LONDON
+  EUROPE_PARIS
+  EUROPE_BERLIN
+  ASIA_TOKYO
+  ASIA_SINGAPORE
+  ASIA_DUBAI
+  AUSTRALIA_SYDNEY
 }
 
 /**
- * Represents the category of an event.
- * @property PERSONAL - Personal event.
- * @property WORK - Work-related event.
- * @property MEETING - Meeting event.
- * @property APPOINTMENT - Appointment event.
- * @property REMINDER - Reminder event.
- * @property SOCIAL - Social event.
- * @property TRAVEL - Travel-related event.
- * @property HEALTH - Health-related event.
- * @property EDUCATION - Education-related event.
- * @property OTHER - Other category.
+ * Represents reminder time units for event notifications.
+ * @param MINUTES Reminder in minutes before the event
+ * @param HOURS Reminder in hours before the event
+ * @param DAYS Reminder in days before the event
+ * @param WEEKS Reminder in weeks before the event
  */
-enum EventCategory {
-  PERSONAL
-  WORK
-  MEETING
-  APPOINTMENT
-  REMINDER
-  SOCIAL
-  TRAVEL
-  HEALTH
-  EDUCATION
-  OTHER
+enum ReminderUnit {
+  MINUTES
+  HOURS
+  DAYS
+  WEEKS
 }
 
 /**
- * Represents the status of AI processing for an event.
- * @property PENDING - AI processing is pending.
- * @property PROCESSING - AI is currently processing.
- * @property COMPLETED - AI processing is completed.
- * @property FAILED - AI processing failed.
- * @property RETRY - AI processing needs retry.
+ * Represents the status of user input processing.
+ * @param PENDING Processing is waiting to start
+ * @param PROCESSING Currently being processed
+ * @param COMPLETED Processing finished successfully
+ * @param FAILED Processing encountered an error
+ * @param RETRY Processing needs to be retried
  */
-enum AIProcessingStatus {
+enum ProcessingStatus {
   PENDING
   PROCESSING
   COMPLETED
