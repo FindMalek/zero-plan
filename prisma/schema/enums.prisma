@@ -1,4 +1,3 @@
-
 /**
  * Represents different repeat patterns for recurring events.
  * @param NONE Event does not repeat (one-time event)
@@ -21,18 +20,7 @@ enum RepeatPattern {
 
 /**
  * Represents common timezones for events.
- * @param UTC Coordinated Universal Time
- * @param AMERICA_NEW_YORK Eastern Time (US & Canada)
- * @param AMERICA_CHICAGO Central Time (US & Canada)
- * @param AMERICA_DENVER Mountain Time (US & Canada)
- * @param AMERICA_LOS_ANGELES Pacific Time (US & Canada)
- * @param EUROPE_LONDON British Time
- * @param EUROPE_PARIS Central European Time
- * @param EUROPE_BERLIN Central European Time
- * @param ASIA_TOKYO Japan Standard Time
- * @param ASIA_SINGAPORE Singapore Standard Time
- * @param ASIA_DUBAI Gulf Standard Time
- * @param AUSTRALIA_SYDNEY Australian Eastern Time
+ * @todo: add more timezones
  */
 enum Timezone {
   UTC
@@ -61,6 +49,38 @@ enum ReminderUnit {
   HOURS
   DAYS
   WEEKS
+}
+
+/**
+ * Represents RSVP status for event participants.
+ * @param PENDING Participant has not responded to the invitation
+ * @param ACCEPTED Participant has accepted the invitation
+ * @param DECLINED Participant has declined the invitation
+ * @param MAYBE Participant might attend (tentative)
+ * @param NO_RESPONSE No response required (informational invite)
+ */
+enum RsvpStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  MAYBE
+  NO_RESPONSE
+}
+
+/**
+ * Represents participant roles in an event.
+ * @param ORGANIZER Event organizer (can edit the event)
+ * @param ATTENDEE Regular attendee
+ * @param OPTIONAL_ATTENDEE Optional attendee (attendance not required)
+ * @param PRESENTER Person presenting in the event
+ * @param MODERATOR Event moderator/facilitator
+ */
+enum ParticipantRole {
+  ORGANIZER
+  ATTENDEE
+  OPTIONAL_ATTENDEE
+  PRESENTER
+  MODERATOR
 }
 
 /**

@@ -2,19 +2,23 @@
 
 import { getQueryClient } from "@/orpc/client"
 import { QueryClientProvider } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import { Moon, Sun, LogIn, UserPlus } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { LogIn, Moon, Sun, UserPlus } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { ThemeProvider } from "@/components/layout/theme-provider"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 function Header() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <div className="absolute top-4 right-4 flex items-center gap-3 z-50">
+    <div className="absolute right-4 top-4 z-50 flex items-center gap-3">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -34,12 +38,15 @@ function Header() {
       </TooltipProvider>
 
       <Button variant="ghost" size="sm" className="rounded-lg">
-        <LogIn className="h-4 w-4 mr-2" />
+        <LogIn className="mr-2 h-4 w-4" />
         Login
       </Button>
-      
-      <Button size="sm" className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900">
-        <UserPlus className="h-4 w-4 mr-2" />
+
+      <Button
+        size="sm"
+        className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+      >
+        <UserPlus className="mr-2 h-4 w-4" />
         Register
       </Button>
     </div>

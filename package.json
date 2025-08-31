@@ -21,7 +21,7 @@
   },
   "prisma": {
     "schema": "./prisma/schema/",
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed/index.ts"
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seeds/index.ts"
   },
   "dependencies": {
     "@ai-sdk/groq": "^1.2.9",
@@ -81,7 +81,6 @@
     "react-day-picker": "8.10.1",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.3",
-
     "recharts": "^2.15.3",
     "server-only": "^0.0.1",
     "sonner": "^2.0.3",
@@ -95,13 +94,10 @@
     "@eslint/eslintrc": "^3",
     "@ianvs/prettier-plugin-sort-imports": "^4.2.1",
     "@tailwindcss/postcss": "^4",
-
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-
     "@types/ws": "^8.18.1",
-
     "bufferutil": "^4.0.9",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",

@@ -1,92 +1,144 @@
 import { z } from "zod"
+
 import { processingStatusSchema } from "../utils"
 
-// Processing Session Response Object
-export const processingSessionRoSchema = z.object({
+// =============================================================================
+// PROCESSING RESPONSE OBJECTS (Three-Tier System)
+// =============================================================================
+
+// Processing Session Simple RO (Basic session - no relations)
+export const processingSessionSimpleRo = z.object({
   id: z.string(),
   userInput: z.string(),
-  processedOutput: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown())])),
   model: z.string(),
   provider: z.string(),
+  status: processingStatusSchema,
   processingTimeMs: z.number().optional(),
   tokensUsed: z.number().optional(),
   confidence: z.number().optional(),
-  status: processingStatusSchema,
+  metadata: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
+    .optional(),
   errorMessage: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  eventId: z.string().optional(),
   userId: z.string(),
 })
 
-export type ProcessingSessionRo = z.infer<typeof processingSessionRoSchema>
+export type ProcessingSessionSimpleRo = z.infer<
+  typeof processingSessionSimpleRo
+>
 
-// Create Processing Session Output
-export const createProcessingSessionOutputSchema = z.object({
+// Processing Session RO (With basic stats)
+export const processingSessionRo = processingSessionSimpleRo.extend({
+  eventsCreated: z.number().optional(),
+})
+
+export type ProcessingSessionRo = z.infer<typeof processingSessionRo>
+
+// Processing Session Full RO (With events)
+export const processingSessionFullRo = processingSessionSimpleRo.extend({
+  eventsCreated: z.number().optional(),
+  events: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        emoji: z.string(),
+        startTime: z.date(),
+        endTime: z.date().optional(),
+        calendarId: z.string(),
+      })
+    )
+    .optional(),
+})
+
+export type ProcessingSessionFullRo = z.infer<typeof processingSessionFullRo>
+
+// =============================================================================
+// API RESPONSE WRAPPERS
+// =============================================================================
+
+// Create Processing Session Response
+export const createProcessingSessionRo = z.object({
   success: z.boolean(),
-  processingSession: z.object({
-    id: z.string(),
-    userInput: z.string(),
-    model: z.string(),
-    provider: z.string(),
-    status: processingStatusSchema,
-    createdAt: z.date(),
-  }).optional(),
+  processingSession: processingSessionRo.optional(),
   error: z.string().optional(),
 })
 
-export type CreateProcessingSessionOutput = z.infer<typeof createProcessingSessionOutputSchema>
+export type CreateProcessingSessionRo = z.infer<
+  typeof createProcessingSessionRo
+>
 
-// Update Processing Session Output
-export const updateProcessingSessionOutputSchema = z.object({
+// Get Processing Session Response
+export const getProcessingSessionRo = z.object({
   success: z.boolean(),
-  processingSession: processingSessionRoSchema.optional(),
+  processingSession: processingSessionFullRo.optional(),
   error: z.string().optional(),
 })
 
-export type UpdateProcessingSessionOutput = z.infer<typeof updateProcessingSessionOutputSchema>
+export type GetProcessingSessionRo = z.infer<typeof getProcessingSessionRo>
 
-// Get Processing Session Output
-export const getProcessingSessionOutputSchema = z.object({
+// Update Processing Session Response
+export const updateProcessingSessionRo = z.object({
   success: z.boolean(),
-  processingSession: processingSessionRoSchema.optional(),
+  processingSession: processingSessionRo.optional(),
   error: z.string().optional(),
 })
 
-export type GetProcessingSessionOutput = z.infer<typeof getProcessingSessionOutputSchema>
+export type UpdateProcessingSessionRo = z.infer<
+  typeof updateProcessingSessionRo
+>
 
-// Delete Processing Session Output
-export const deleteProcessingSessionOutputSchema = z.object({
+// Delete Processing Session Response
+export const deleteProcessingSessionRo = z.object({
   success: z.boolean(),
   error: z.string().optional(),
 })
 
-export type DeleteProcessingSessionOutput = z.infer<typeof deleteProcessingSessionOutputSchema>
+export type DeleteProcessingSessionRo = z.infer<
+  typeof deleteProcessingSessionRo
+>
 
-// List Processing Sessions Output
-export const listProcessingSessionsOutputSchema = z.object({
+// List Processing Sessions Response
+export const listProcessingSessionsRo = z.object({
   success: z.boolean(),
-  processingSessions: z.array(z.object({
-    id: z.string(),
-    userInput: z.string(),
-    model: z.string(),
-    provider: z.string(),
-    processingTimeMs: z.number().optional(),
-    tokensUsed: z.number().optional(),
-    confidence: z.number().optional(),
-    status: processingStatusSchema,
-    errorMessage: z.string().optional(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-    eventId: z.string().optional(),
-  })).optional(),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }).optional(),
+  processingSessions: z.array(processingSessionRo).optional(),
+  pagination: z
+    .object({
+      page: z.number(),
+      limit: z.number(),
+      total: z.number(),
+      totalPages: z.number(),
+    })
+    .optional(),
   error: z.string().optional(),
 })
 
-export type ListProcessingSessionsOutput = z.infer<typeof listProcessingSessionsOutputSchema>
+export type ListProcessingSessionsRo = z.infer<typeof listProcessingSessionsRo>
+
+// =============================================================================
+// DOMAIN-SPECIFIC RESPONSES
+// =============================================================================
+
+// Process Events Response (moved from events domain)
+export const processEventsRo = z.object({
+  success: z.boolean(),
+  events: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        emoji: z.string(),
+        startTime: z.date(),
+        endTime: z.date().optional(),
+        calendarId: z.string(),
+      })
+    )
+    .optional(),
+  processingSession: processingSessionRo.optional(),
+  totalEvents: z.number().optional(),
+  error: z.string().optional(),
+})
+
+export type ProcessEventsRo = z.infer<typeof processEventsRo>

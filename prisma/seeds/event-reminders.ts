@@ -1,8 +1,4 @@
-import {
-  ReminderUnit,
-  Prisma,
-  PrismaClient,
-} from "@prisma/client"
+import { Prisma, PrismaClient, ReminderUnit } from "@prisma/client"
 
 async function seedEventReminders(prisma: PrismaClient) {
   console.log("🌱 Seeding event reminders...")
@@ -14,7 +10,10 @@ async function seedEventReminders(prisma: PrismaClient) {
 
   for (const event of events) {
     // Add different reminders based on event type
-    if (event.title.includes("Dentist") || event.title.includes("Appointment")) {
+    if (
+      event.title.includes("Dentist") ||
+      event.title.includes("Appointment")
+    ) {
       // Medical appointments get more reminders
       remindersToCreate.push(
         {
@@ -42,7 +41,11 @@ async function seedEventReminders(prisma: PrismaClient) {
           eventId: event.id,
         }
       )
-    } else if (event.title.includes("Meeting") || event.title.includes("Standup") || event.title.includes("Review")) {
+    } else if (
+      event.title.includes("Meeting") ||
+      event.title.includes("Standup") ||
+      event.title.includes("Review")
+    ) {
       // Work meetings get standard reminders
       remindersToCreate.push(
         {
@@ -62,7 +65,10 @@ async function seedEventReminders(prisma: PrismaClient) {
           eventId: event.id,
         }
       )
-    } else if (event.title.includes("Party") || event.title.includes("Social")) {
+    } else if (
+      event.title.includes("Party") ||
+      event.title.includes("Social")
+    ) {
       // Social events get gentle reminders
       remindersToCreate.push(
         {

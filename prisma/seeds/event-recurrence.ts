@@ -1,8 +1,4 @@
-import {
-  RepeatPattern,
-  Prisma,
-  PrismaClient,
-} from "@prisma/client"
+import { Prisma, PrismaClient, RepeatPattern } from "@prisma/client"
 
 async function seedEventRecurrence(prisma: PrismaClient) {
   console.log("🌱 Seeding event recurrence...")
@@ -17,13 +13,23 @@ async function seedEventRecurrence(prisma: PrismaClient) {
     let endDate: Date | undefined
 
     // Set recurrence patterns based on event type
-    if (event.title.includes("Morning Routine") || event.title.includes("Daily") || event.title.includes("Standup")) {
+    if (
+      event.title.includes("Morning Routine") ||
+      event.title.includes("Daily") ||
+      event.title.includes("Standup")
+    ) {
       pattern = RepeatPattern.DAILY
       endDate = new Date("2024-12-31T23:59:59Z") // End of year
-    } else if (event.title.includes("Grocery Shopping") || event.title.includes("Weekly")) {
+    } else if (
+      event.title.includes("Grocery Shopping") ||
+      event.title.includes("Weekly")
+    ) {
       pattern = RepeatPattern.WEEKLY
       endDate = new Date("2024-06-30T23:59:59Z") // 6 months
-    } else if (event.title.includes("Monthly") || event.title.includes("Review")) {
+    } else if (
+      event.title.includes("Monthly") ||
+      event.title.includes("Review")
+    ) {
       pattern = RepeatPattern.MONTHLY
       endDate = new Date("2024-12-31T23:59:59Z") // End of year
     } else {

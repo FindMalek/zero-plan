@@ -2,9 +2,6 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ZodError, ZodIssue } from "zod"
 
-import { env } from "@/env"
-import { User as UserType } from "@/types"
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -21,7 +18,10 @@ export function formatDate(date: Date | string) {
   })
 }
 
-export function getAvatarOrFallback(user: UserType) {
+export function getAvatarOrFallback(user: {
+  name?: string
+  image?: string | null
+}) {
   if (!user.image) {
     return `https://avatar.vercel.sh/${user.name}`
   }

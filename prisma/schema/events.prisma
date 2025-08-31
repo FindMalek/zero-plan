@@ -9,13 +9,8 @@
  * @param timezone Timezone for the event
  * @param isAllDay Whether this is an all-day event
  * @param location Physical or virtual location of the event
- * @param meetingRoom Conference/meeting room details
- * @param conferenceLink Video conferencing link (Zoom, Meet, Teams, etc.)
- * @param conferenceId Conference ID or meeting ID
- * @param participantEmails List of participant email addresses (String array)
  * @param maxParticipants Maximum number of participants allowed
  * @param links Links related to the event (String array of objects with title and url)
- * @param documents Attached documents (String array of objects with filename and url)
  * @param aiConfidence AI confidence score for event extraction (0-1)
  * @param createdAt Timestamp when the event was created
  * @param updatedAt Timestamp when the event was last updated
@@ -25,30 +20,27 @@
  * @param calendar Relationship to the Calendar model
  * @param recurrence Recurrence rules for this event
  * @param reminders Reminders set for this event
+ * @param conference Conference/meeting details for this event
+ * @param participants Participants invited to this event
  * @param processingSessions Processing sessions for this event
  */
 model Event {
   id String @id @default(uuid())
 
-  emoji String @default("📅")
-  title String
+  emoji       String  @default("📅")
+  title       String
   description String?
 
   startTime DateTime
-  endTime DateTime?
+  endTime   DateTime?
+  isAllDay  Boolean   @default(false)
+
   timezone Timezone @default(UTC)
-  isAllDay Boolean @default(false)
 
-  location String?
-  meetingRoom String?
-  conferenceLink String?
-  conferenceId String?
-
-  participantEmails String[] 
+  location        String?
   maxParticipants Int?
 
   links String[]
-  documents String[] 
 
   aiConfidence Float?
 
@@ -56,13 +48,15 @@ model Event {
   updatedAt DateTime @updatedAt
 
   userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   calendarId String
-  calendar Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  calendar   Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
 
-  recurrence EventRecurrence?
-  reminders EventReminder[]
+  recurrence              EventRecurrence?
+  reminders               EventReminder[]
+  conference              EventConference?
+  participants            EventParticipant[]
   inputProcessingSessions InputProcessingSession[]
 
   @@index([userId])
@@ -85,15 +79,15 @@ model Event {
 model EventRecurrence {
   id String @id @default(uuid())
 
-  pattern RepeatPattern @default(NONE)
-  endDate DateTime?
+  pattern    RepeatPattern @default(NONE)
+  endDate    DateTime?
   customRule Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   eventId String @unique
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([pattern])
   @@map("event_recurrence")
@@ -113,14 +107,93 @@ model EventReminder {
   id String @id @default(uuid())
 
   value Int
-  unit ReminderUnit
+  unit  ReminderUnit
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   eventId String
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
   @@map("event_reminder")
+}
+
+/**
+ * Represents conference/meeting details for an event.
+ * @param id Unique identifier for the conference details
+ * @param meetingRoom Conference or meeting room location/details
+ * @param conferenceLink Video conferencing link (Zoom, Meet, Teams, etc.)
+ * @param conferenceId Conference ID or meeting ID for joining
+ * @param dialInNumber Dial-in phone number for audio participation
+ * @param accessCode Access code or PIN for joining the conference
+ * @param hostKey Host key for moderating the conference
+ * @param isRecorded Whether the conference will be recorded
+ * @param maxDuration Maximum duration of the conference in minutes
+ * @param createdAt Timestamp when the conference details were created
+ * @param updatedAt Timestamp when the conference details were last updated
+ * @param eventId Foreign key to the event these conference details belong to
+ * @param event Relationship to the Event model
+ */
+model EventConference {
+  id String @id @default(uuid())
+
+  meetingRoom    String?
+  conferenceLink String?
+  conferenceId   String?
+  dialInNumber   String?
+  accessCode     String?
+  hostKey        String?
+  isRecorded     Boolean @default(false)
+  maxDuration    Int? // in minutes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  eventId String @unique
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_conference")
+}
+
+/**
+ * Represents a participant in an event.
+ * @param id Unique identifier for the participant
+ * @param email Email address of the participant
+ * @param name Display name of the participant (optional)
+ * @param role Role of the participant in the event
+ * @param rsvpStatus RSVP response status
+ * @param isOrganizer Whether this participant is the event organizer
+ * @param notes Optional notes about this participant
+ * @param invitedAt Timestamp when the participant was invited
+ * @param respondedAt Timestamp when the participant responded to the invite
+ * @param createdAt Timestamp when the participant was added
+ * @param updatedAt Timestamp when the participant details were last updated
+ * @param eventId Foreign key to the event this participant belongs to
+ * @param event Relationship to the Event model
+ */
+model EventParticipant {
+  id String @id @default(uuid())
+
+  email       String
+  name        String?
+  role        ParticipantRole @default(ATTENDEE)
+  rsvpStatus  RsvpStatus      @default(PENDING)
+  isOrganizer Boolean         @default(false)
+  notes       String?
+
+  invitedAt   DateTime  @default(now())
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email]) // Prevent duplicate participants per event
+  @@index([eventId])
+  @@index([email])
+  @@index([rsvpStatus])
+  @@map("event_participant")
 }

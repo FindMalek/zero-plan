@@ -16,8 +16,8 @@
 model User {
   id String @id
 
-  name String
-  email String
+  name          String
+  email         String
   emailVerified Boolean
 
   image String?
@@ -25,10 +25,10 @@ model User {
   createdAt DateTime
   updatedAt DateTime
 
-  sessions Session[]
-  accounts Account[]
-  calendars Calendar[]
-  events Event[]
+  sessions                Session[]
+  accounts                Account[]
+  calendars               Calendar[]
+  events                  Event[]
   inputProcessingSessions InputProcessingSession[]
 
   @@unique([email])
@@ -60,7 +60,7 @@ model Session {
   updatedAt DateTime
 
   userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
   @@map("session")
@@ -86,23 +86,23 @@ model Session {
 model Account {
   id String @id
 
-  accountId String
+  accountId  String
   providerId String
 
-  accessToken String?
+  accessToken  String?
   refreshToken String?
-  idToken String?
-  scope String?
-  password String?
+  idToken      String?
+  scope        String?
+  password     String?
 
-  accessTokenExpiresAt DateTime?
+  accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
 
   createdAt DateTime
   updatedAt DateTime
 
   userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -120,7 +120,7 @@ model Verification {
   id String @id
 
   identifier String
-  value String
+  value      String
 
   createdAt DateTime?
   updatedAt DateTime?
@@ -141,11 +141,11 @@ model Verification {
  * @param createdAt Timestamp when they joined the waitlist
  */
 model Waitlist {
-  id String @id @default(uuid())
+  id    String @id @default(uuid())
   email String @unique
 
-  country String?
-  city String?
+  country   String?
+  city      String?
   ipAddress String?
   userAgent String?
 

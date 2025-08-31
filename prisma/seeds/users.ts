@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient,  } from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client"
 
 async function seedUsers(prisma: PrismaClient) {
   console.log("🌱 Seeding users...")
@@ -14,7 +14,7 @@ async function seedUsers(prisma: PrismaClient) {
       updatedAt: new Date(),
     },
     {
-      id: "user_2", 
+      id: "user_2",
       name: "Jane Smith",
       email: "jane@example.com",
       emailVerified: true,
@@ -25,7 +25,7 @@ async function seedUsers(prisma: PrismaClient) {
     {
       id: "user_3",
       name: "Mike Johnson",
-      email: "mike@example.com", 
+      email: "mike@example.com",
       emailVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),

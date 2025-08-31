@@ -1,7 +1,11 @@
 import { z } from "zod"
 
-// Calendar Response Object
-export const calendarRoSchema = z.object({
+// =============================================================================
+// CALENDAR RESPONSE OBJECTS (Three-Tier System)
+// =============================================================================
+
+// Calendar Simple RO (Basic calendar - no relations)
+export const calendarSimpleRo = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
@@ -14,54 +18,88 @@ export const calendarRoSchema = z.object({
   userId: z.string(),
 })
 
-export type CalendarRo = z.infer<typeof calendarRoSchema>
+export type CalendarSimpleRo = z.infer<typeof calendarSimpleRo>
 
-// Create Calendar Output
-export const createCalendarOutputSchema = z.object({
+// Calendar RO (With some basic stats)
+export const calendarRo = calendarSimpleRo.extend({
+  eventCount: z.number().optional(),
+  upcomingEvents: z.number().optional(),
+})
+
+export type CalendarRo = z.infer<typeof calendarRo>
+
+// Calendar Full RO (With events)
+export const calendarFullRo = calendarSimpleRo.extend({
+  eventCount: z.number().optional(),
+  upcomingEvents: z.number().optional(),
+  events: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        emoji: z.string(),
+        startTime: z.date(),
+        endTime: z.date().optional(),
+        isAllDay: z.boolean(),
+      })
+    )
+    .optional(),
+})
+
+export type CalendarFullRo = z.infer<typeof calendarFullRo>
+
+// =============================================================================
+// API RESPONSE WRAPPERS
+// =============================================================================
+
+// Create Calendar Response
+export const createCalendarRo = z.object({
   success: z.boolean(),
-  calendar: calendarRoSchema.optional(),
+  calendar: calendarRo.optional(),
   error: z.string().optional(),
 })
 
-export type CreateCalendarOutput = z.infer<typeof createCalendarOutputSchema>
+export type CreateCalendarRo = z.infer<typeof createCalendarRo>
 
-// Update Calendar Output
-export const updateCalendarOutputSchema = z.object({
+// Get Calendar Response
+export const getCalendarRo = z.object({
   success: z.boolean(),
-  calendar: calendarRoSchema.optional(),
+  calendar: calendarFullRo.optional(),
   error: z.string().optional(),
 })
 
-export type UpdateCalendarOutput = z.infer<typeof updateCalendarOutputSchema>
+export type GetCalendarRo = z.infer<typeof getCalendarRo>
 
-// Get Calendar Output
-export const getCalendarOutputSchema = z.object({
+// Update Calendar Response
+export const updateCalendarRo = z.object({
   success: z.boolean(),
-  calendar: calendarRoSchema.optional(),
+  calendar: calendarRo.optional(),
   error: z.string().optional(),
 })
 
-export type GetCalendarOutput = z.infer<typeof getCalendarOutputSchema>
+export type UpdateCalendarRo = z.infer<typeof updateCalendarRo>
 
-// Delete Calendar Output
-export const deleteCalendarOutputSchema = z.object({
+// Delete Calendar Response
+export const deleteCalendarRo = z.object({
   success: z.boolean(),
   error: z.string().optional(),
 })
 
-export type DeleteCalendarOutput = z.infer<typeof deleteCalendarOutputSchema>
+export type DeleteCalendarRo = z.infer<typeof deleteCalendarRo>
 
-// List Calendars Output
-export const listCalendarsOutputSchema = z.object({
+// List Calendars Response
+export const listCalendarsRo = z.object({
   success: z.boolean(),
-  calendars: z.array(calendarRoSchema).optional(),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }).optional(),
+  calendars: z.array(calendarRo).optional(),
+  pagination: z
+    .object({
+      page: z.number(),
+      limit: z.number(),
+      total: z.number(),
+      totalPages: z.number(),
+    })
+    .optional(),
   error: z.string().optional(),
 })
 
-export type ListCalendarsOutput = z.infer<typeof listCalendarsOutputSchema>
+export type ListCalendarsRo = z.infer<typeof listCalendarsRo>

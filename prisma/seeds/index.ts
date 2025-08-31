@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client"
 
-import { seedUsers } from "./users"
 import { seedCalendars } from "./calendars"
-import { seedEvents } from "./events"
 import { seedEventRecurrence } from "./event-recurrence"
 import { seedEventReminders } from "./event-reminders"
+import { seedEvents } from "./events"
 import { seedInputProcessingSessions } from "./input-processing-sessions"
+import { seedUsers } from "./users"
 
 const prisma = new PrismaClient()
 

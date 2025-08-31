@@ -3,10 +3,16 @@ import {
   AIProcessingStatusInfer,
   EventAISimpleRo,
 } from "@/schemas/event"
-// Using string literal for now - will be available after database creation
-type AIProcessingStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "RETRY"
 
 import { EventAIEntitySimpleDbData } from "./query"
+
+// Using string literal for now - will be available after database creation
+type AIProcessingStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "FAILED"
+  | "RETRY"
 
 export class EventAIEntity {
   static getSimpleRo(entity: EventAIEntitySimpleDbData): EventAISimpleRo {
@@ -18,14 +24,18 @@ export class EventAIEntity {
       provider: entity.provider,
       processingTime: entity.processingTime || undefined,
       confidence: entity.confidence || undefined,
-      status: this.convertPrismaToAIProcessingStatus(entity.status as AIProcessingStatus),
+      status: this.convertPrismaToAIProcessingStatus(
+        entity.status as AIProcessingStatus
+      ),
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       eventId: entity.eventId,
     }
   }
 
-  static convertPrismaToAIProcessingStatus(status: AIProcessingStatus): AIProcessingStatusInfer {
+  static convertPrismaToAIProcessingStatus(
+    status: AIProcessingStatus
+  ): AIProcessingStatusInfer {
     switch (status) {
       case "PENDING":
         return aiProcessingStatusEnum.PENDING
@@ -42,7 +52,9 @@ export class EventAIEntity {
     }
   }
 
-  static convertAIProcessingStatusToPrisma(status: AIProcessingStatusInfer): AIProcessingStatus {
+  static convertAIProcessingStatusToPrisma(
+    status: AIProcessingStatusInfer
+  ): AIProcessingStatus {
     switch (status) {
       case aiProcessingStatusEnum.PENDING:
         return "PENDING"
@@ -59,7 +71,9 @@ export class EventAIEntity {
     }
   }
 
-  static convertAIProcessingStatusToString(status: AIProcessingStatusInfer): string {
+  static convertAIProcessingStatusToString(
+    status: AIProcessingStatusInfer
+  ): string {
     switch (status) {
       case aiProcessingStatusEnum.PENDING:
         return "Pending"

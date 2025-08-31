@@ -1,7 +1,4 @@
-import {
-  Prisma,
-  PrismaClient,
-} from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client"
 
 async function seedCalendars(prisma: PrismaClient) {
   console.log("🌱 Seeding calendars...")

@@ -70,8 +70,8 @@ export class EventQuery {
           status: true,
           createdAt: true,
           updatedAt: true,
-        }
-      }
+        },
+      },
     }
   }
 }

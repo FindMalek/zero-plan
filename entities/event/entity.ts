@@ -1,18 +1,34 @@
 import {
-  eventStatusEnum,
-  EventStatusInfer,
-  eventPriorityEnum,
-  EventPriorityInfer,
   eventCategoryEnum,
   EventCategoryInfer,
+  eventPriorityEnum,
+  EventPriorityInfer,
   EventSimpleRo,
+  eventStatusEnum,
+  EventStatusInfer,
 } from "@/schemas/event"
-// Using string literals for now - these will be available after database creation
-type EventStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "POSTPONED"
-type EventPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT"
-type EventCategory = "PERSONAL" | "WORK" | "MEETING" | "APPOINTMENT" | "REMINDER" | "SOCIAL" | "TRAVEL" | "HEALTH" | "EDUCATION" | "OTHER"
 
 import { EventEntitySimpleDbData } from "./query"
+
+// Using string literals for now - these will be available after database creation
+type EventStatus =
+  | "PLANNED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "POSTPONED"
+type EventPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+type EventCategory =
+  | "PERSONAL"
+  | "WORK"
+  | "MEETING"
+  | "APPOINTMENT"
+  | "REMINDER"
+  | "SOCIAL"
+  | "TRAVEL"
+  | "HEALTH"
+  | "EDUCATION"
+  | "OTHER"
 
 export class EventEntity {
   static getSimpleRo(entity: EventEntitySimpleDbData): EventSimpleRo {
@@ -24,8 +40,12 @@ export class EventEntity {
       endTime: entity.endTime || undefined,
       location: entity.location || undefined,
       status: this.convertPrismaToEventStatus(entity.status as EventStatus),
-      priority: this.convertPrismaToEventPriority(entity.priority as EventPriority),
-      category: this.convertPrismaToEventCategory(entity.category as EventCategory),
+      priority: this.convertPrismaToEventPriority(
+        entity.priority as EventPriority
+      ),
+      category: this.convertPrismaToEventCategory(
+        entity.category as EventCategory
+      ),
       originalInput: entity.originalInput || undefined,
       aiProcessed: entity.aiProcessed,
       aiConfidence: entity.aiConfidence || undefined,
@@ -69,7 +89,9 @@ export class EventEntity {
     }
   }
 
-  static convertPrismaToEventPriority(priority: EventPriority): EventPriorityInfer {
+  static convertPrismaToEventPriority(
+    priority: EventPriority
+  ): EventPriorityInfer {
     switch (priority) {
       case "LOW":
         return eventPriorityEnum.LOW
@@ -84,7 +106,9 @@ export class EventEntity {
     }
   }
 
-  static convertEventPriorityToPrisma(priority: EventPriorityInfer): EventPriority {
+  static convertEventPriorityToPrisma(
+    priority: EventPriorityInfer
+  ): EventPriority {
     switch (priority) {
       case eventPriorityEnum.LOW:
         return "LOW"
@@ -99,7 +123,9 @@ export class EventEntity {
     }
   }
 
-  static convertPrismaToEventCategory(category: EventCategory): EventCategoryInfer {
+  static convertPrismaToEventCategory(
+    category: EventCategory
+  ): EventCategoryInfer {
     switch (category) {
       case "PERSONAL":
         return eventCategoryEnum.PERSONAL
@@ -126,7 +152,9 @@ export class EventEntity {
     }
   }
 
-  static convertEventCategoryToPrisma(category: EventCategoryInfer): EventCategory {
+  static convertEventCategoryToPrisma(
+    category: EventCategoryInfer
+  ): EventCategory {
     switch (category) {
       case eventCategoryEnum.PERSONAL:
         return "PERSONAL"
