@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { eventSimpleRo } from "../event"
 import { processingStatusSchema } from "../utils"
 
 // =============================================================================
@@ -124,18 +125,7 @@ export type ListProcessingSessionsRo = z.infer<typeof listProcessingSessionsRo>
 // Process Events Response (moved from events domain)
 export const processEventsRo = z.object({
   success: z.boolean(),
-  events: z
-    .array(
-      z.object({
-        id: z.string(),
-        title: z.string(),
-        emoji: z.string(),
-        startTime: z.date(),
-        endTime: z.date().optional(),
-        calendarId: z.string(),
-      })
-    )
-    .optional(),
+  events: z.array(eventSimpleRo).optional(),
   processingSession: processingSessionRo.optional(),
   totalEvents: z.number().optional(),
   error: z.string().optional(),

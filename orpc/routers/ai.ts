@@ -1,12 +1,23 @@
 import { EventEntity, EventQuery } from "@/entities/events"
 import { database } from "@/prisma/client"
-import { createEventDto, eventRo } from "@/schemas/event"
-import { timezoneSchema } from "@/schemas/utils"
+import {
+  aiEventGenerationSchema,
+  AiEventGenerationSchema,
+  generateEventsRo,
+  GenerateEventsRo,
+} from "@/schemas/ai"
 import { ORPCError, os } from "@orpc/server"
-import { generateObject } from "ai"
+import { generateObject, generateText, stepCountIs } from "ai"
 import { z } from "zod"
 
-import { client as aiClient } from "@/config/openai"
+import { aiModel, MODEL_NAME, PROVIDER_NAME } from "@/config/openai"
+import {
+  calculateEventTimingTool,
+  formatTravelEventTool,
+  generateEventDescriptionTool,
+  getCurrentTimeInfoTool,
+  selectEventEmojiTool,
+} from "@/lib/tools"
 
 import type { ORPCContext } from "../types"
 
@@ -20,72 +31,14 @@ const privateProcedure = baseProcedure.use(({ context, next }) => {
   return next({ context: { ...context, user: context.user } })
 })
 
-// AI Event Generation Schema - extends existing createEventDto
-const aiEventSchema = createEventDto
-  .omit({ calendarId: true }) // We'll handle calendar separately
-  .extend({
-    startTime: z.string().describe("ISO 8601 start date/time for the event"),
-    endTime: z
-      .string()
-      .optional()
-      .describe("ISO 8601 end date/time for the event"),
-    timezone: timezoneSchema.default("UTC").describe("Timezone for the event"),
-    confidence: z
-      .number()
-      .min(0)
-      .max(1)
-      .describe("AI confidence score for this extraction"),
-  })
-
-const aiEventGenerationSchema = z.object({
-  events: z.array(aiEventSchema),
-  processingNotes: z
-    .string()
-    .optional()
-    .describe("Any notes about the processing"),
-  confidence: z
-    .number()
-    .min(0)
-    .max(1)
-    .describe("Overall confidence in the extraction"),
-})
-
-type AIEventGeneration = z.infer<typeof aiEventGenerationSchema>
-
-// AI Generate Events Response Schema - simpler approach
-const generateEventsRo = z.object({
-  success: z.boolean(),
-  events: z
-    .array(
-      eventRo.extend({
-        confidence: z.number(),
-      })
-    )
-    .optional(),
-  processingSession: z
-    .object({
-      id: z.string(),
-      confidence: z.number(),
-      processingTimeMs: z.number(),
-      tokensUsed: z.number().optional(),
-    })
-    .optional(),
-  error: z.string().optional(),
-})
-
 // Generate Events with AI using structured output
-export const generateEvents = privateProcedure
+export const generateEvents = baseProcedure
   .input(
     z.object({
       userInput: z
         .string()
         .min(1)
         .describe("Natural language description of events to create"),
-      calendarId: z.string().describe("ID of the calendar to create events in"),
-      context: z
-        .string()
-        .optional()
-        .describe("Additional context for better AI understanding"),
     })
   )
   .output(generateEventsRo)
@@ -93,18 +46,27 @@ export const generateEvents = privateProcedure
     const startTime = Date.now()
 
     try {
-      // Validate calendar access
+      // For MVP: Use demo user if no authentication
+      const userId = context.user?.id || "user_1"
+
+      // Get user's default calendar (or first available calendar for demo)
       const calendar = await database.calendar.findFirst({
         where: {
-          id: input.calendarId,
-          userId: context.user.id,
+          userId: userId,
+          isDefault: true,
         },
       })
 
-      if (!calendar) {
+      // Fallback: get any calendar for demo purposes
+      const fallbackCalendar = !calendar
+        ? await database.calendar.findFirst()
+        : null
+      const activeCalendar = calendar || fallbackCalendar
+
+      if (!activeCalendar) {
         return {
           success: false,
-          error: "Calendar not found or you don't have permission to access it",
+          error: "No calendar available for event creation",
         }
       }
 
@@ -113,39 +75,114 @@ export const generateEvents = privateProcedure
         data: {
           userInput: input.userInput,
           processedOutput: {},
-          model: "gpt-4o-mini",
-          provider: "voidai",
+          model: MODEL_NAME,
+          provider: "openai",
           status: "PROCESSING",
-          userId: context.user.id,
+          userId: userId,
         },
       })
 
       try {
-        // Get current date/time for context
-        const now = new Date()
-        const currentDateTime = now.toISOString()
+        // All time/date context will be provided by tools
 
-        // Use generateObject for structured AI output
-        const { object: aiResponse } = await generateObject({
-          model: aiClient.chat("gpt-4o-mini"),
-          schema: aiEventGenerationSchema,
-          prompt: `You are an intelligent event planning assistant. Parse the following natural language input into structured events.
+        // Use generateText with tools for enhanced context and formatting
+        const result = await generateText({
+          model: aiModel,
+          tools: {
+            getCurrentTimeInfo: getCurrentTimeInfoTool,
+            selectEventEmoji: selectEventEmojiTool,
+            formatTravelEvent: formatTravelEventTool,
+            generateEventDescription: generateEventDescriptionTool,
+            calculateEventTiming: calculateEventTimingTool,
+          },
+          stopWhen: stepCountIs(5),
+          prompt: `You are a highly intelligent event planning assistant. Parse the following input into structured events with SPECIFIC, DETAILED titles that include ALL relevant context.
 
-Current date and time: ${currentDateTime}
-Calendar context: Creating events for calendar "${calendar.name}"
-${input.context ? `Additional context: ${input.context}` : ""}
+CONTEXT:
+- Calendar: "${activeCalendar.name}"
 
-User input: "${input.userInput}"
+USER INPUT: "${input.userInput}"
 
-Instructions:
-- Extract all possible events from the input
-- Use appropriate emojis for each event type
-- Set realistic start/end times based on current date/time
-- Infer timezone from location hints or use UTC as default
-- Set confidence scores based on how clearly specified each event is
-- Use isAllDay=true for events without specific times
-- Include location if mentioned or can be inferred`,
+🚨 CRITICAL TITLE FORMATTING RULES:
+NEVER create generic titles! Always extract and include specific details from the input:
+
+✅ REQUIRED FORMATS:
+🩺 Medical: "🩺 Doctor (Specialty/Purpose)" - e.g., "🩺 Doctor (Annual Checkup)", "🩺 Doctor (Cardiology)"
+🚗 Travel: "🚗 Car (Origin -> Destination)" - MUST include both locations with arrow format
+🎉 Social: "🎉 Event (Person's Full Name)" - e.g., "🎉 Birthday Party (Ayoub Fanter)"
+♒ Work: "♒ Activity (Project/Type)" - e.g., "♒Jobflow (Client Review)"
+
+❌ FORBIDDEN - NEVER USE THESE GENERIC PATTERNS:
+- "Doctor appointment" ← BAD, use "🩺 Doctor (Purpose/Specialty)"
+- "Travel to X" ← BAD, use "🚗 Car (Origin -> Destination)"
+- "Birthday party" ← BAD, use "🎉 Birthday Party (Person's Name)"
+- "Meeting" ← BAD, use "👥 Meeting (Topic/With Whom)"
+
+EXTRACTION INSTRUCTIONS:
+1. FIRST: Use getCurrentTimeInfo tool for accurate date/time context
+2. For EACH event identified:
+   - Extract ALL names, places, and specific details mentioned
+   - Use selectEventEmoji for contextually appropriate emoji
+   - For travel: Use formatTravelEvent to extract origin AND destination
+   - Use generateEventDescription for rich HTML descriptions
+3. Title Quality Standards:
+   - Medical appointments: Always include specialty or purpose in parentheses
+   - Travel events: Always specify "Origin -> Destination" format
+   - Social events: Always include person's full name when mentioned
+   - Work events: Include project name or meeting type
+   - If specific details aren't clear, use most specific available info
+
+PROCESSING EXAMPLE:
+Input: "appointment tomorrow at the doctor, go to Gafsa from Ksar Hellal, birthday party of friend Ayoub at 8pm"
+Output titles:
+- "🩺 Doctor (Appointment)" ← includes purpose
+- "🚗 Car (Ksar Hellal -> Gafsa)" ← includes both locations with arrow  
+- "🎉 Birthday Party (Ayoub)" ← includes person's name
+
+After using tools to gather context and formatting, provide final JSON:
+{
+  "events": [
+    {
+      "emoji": "🩺",
+      "title": "🩺 Doctor (Specific Purpose/Specialty)",
+      "description": "<p>Rich HTML description</p>",
+      "startTime": "2024-12-21T09:00:00.000Z",
+      "endTime": "2024-12-21T10:00:00.000Z",
+      "timezone": "UTC",
+      "isAllDay": false,
+      "location": "Optional location",
+      "confidence": 0.9
+    }
+  ],
+  "processingNotes": "Details about what specific information was extracted",
+  "confidence": 0.85,
+  "contextUsed": ["extracted", "context", "clues"]
+}
+
+CRITICAL: Extract specific details, use tools for context, then provide detailed JSON structure.`,
         })
+
+        // Parse the final text response as JSON for the structured data
+        const finalMessage = result.text
+        let aiResponse: AiEventGenerationSchema
+
+        try {
+          // Try to extract JSON from the response
+          const jsonMatch = finalMessage.match(/\{[\s\S]*\}/)
+          if (jsonMatch) {
+            aiResponse = JSON.parse(jsonMatch[0])
+          } else {
+            throw new Error("No JSON found in response")
+          }
+        } catch (error) {
+          // Fallback: create a basic response if JSON parsing fails
+          console.error("Failed to parse AI response as JSON:", error)
+          aiResponse = {
+            events: [],
+            processingNotes: "Failed to parse AI response",
+            confidence: 0.1,
+          }
+        }
 
         const processingTimeMs = Date.now() - startTime
 
@@ -153,7 +190,7 @@ Instructions:
         await database.inputProcessingSession.update({
           where: { id: processingSession.id },
           data: {
-            processedOutput: aiResponse as any,
+            processedOutput: JSON.parse(JSON.stringify(aiResponse)),
             status: "COMPLETED",
             processingTimeMs,
             confidence: aiResponse.confidence,
@@ -179,8 +216,8 @@ Instructions:
               maxParticipants: eventData.maxParticipants,
               links: eventData.links || [],
               aiConfidence: eventData.confidence,
-              userId: context.user.id,
-              calendarId: input.calendarId,
+              userId: userId,
+              calendarId: activeCalendar.id,
             },
             select: EventQuery.getSelect(),
           })
@@ -241,7 +278,7 @@ Instructions:
   })
 
 // Re-generate Events (regenerate existing events with new AI interpretation)
-export const regenerateEvents = privateProcedure
+export const regenerateEvents = baseProcedure
   .input(
     z.object({
       processingSessionId: z
@@ -256,11 +293,14 @@ export const regenerateEvents = privateProcedure
   .output(generateEventsRo)
   .handler(async ({ input, context }) => {
     try {
+      // For MVP: Use demo user if no authentication
+      const userId = context.user?.id || "user_1"
+
       // Get original processing session
       const originalSession = await database.inputProcessingSession.findFirst({
         where: {
           id: input.processingSessionId,
-          userId: context.user.id,
+          userId: userId,
         },
         include: {
           event: {
@@ -307,7 +347,7 @@ export const regenerateEvents = privateProcedure
       const calendar = await database.calendar.findFirst({
         where: {
           id: regenerationInput.calendarId,
-          userId: context.user.id,
+          userId: userId,
         },
       })
 
@@ -323,10 +363,10 @@ export const regenerateEvents = privateProcedure
         data: {
           userInput: regenerationInput.userInput,
           processedOutput: {},
-          model: "gpt-4o-mini",
-          provider: "voidai",
+          model: MODEL_NAME,
+          provider: PROVIDER_NAME,
           status: "PROCESSING",
-          userId: context.user.id,
+          userId: userId,
         },
       })
 
@@ -337,7 +377,7 @@ export const regenerateEvents = privateProcedure
 
         // Use generateObject for structured AI output
         const { object: aiResponse } = await generateObject({
-          model: aiClient.chat("gpt-4o-mini"),
+          model: aiModel,
           schema: aiEventGenerationSchema,
           prompt: `You are an intelligent event planning assistant. Parse the following natural language input into structured events.
 
@@ -363,7 +403,7 @@ Instructions:
         await database.inputProcessingSession.update({
           where: { id: processingSession.id },
           data: {
-            processedOutput: aiResponse as any,
+            processedOutput: JSON.parse(JSON.stringify(aiResponse)),
             status: "COMPLETED",
             processingTimeMs,
             confidence: aiResponse.confidence,
@@ -389,7 +429,7 @@ Instructions:
               maxParticipants: eventData.maxParticipants,
               links: eventData.links || [],
               aiConfidence: eventData.confidence,
-              userId: context.user.id,
+              userId: userId,
               calendarId: regenerationInput.calendarId,
             },
             select: EventQuery.getSelect(),

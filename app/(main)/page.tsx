@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useProcessEvents } from "@/orpc/hooks/event"
+import { useGenerateEvents } from "@/orpc/hooks"
+import { EventSimpleRo } from "@/schemas"
 
 import { Icons } from "@/components/shared/icons"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
@@ -14,25 +15,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-interface EventSkeleton {
-  id: string
-  title: string
-  time: string
-  startTime: Date
-  endTime?: Date
-  description?: string
-  location?: string
-  category?: string
-  priority?: string
-}
-
 export default function MainPage() {
+  const processEvents = useGenerateEvents()
+  const [events, setEvents] = useState<EventSimpleRo[]>([])
   const [eventDetails, setEventDetails] = useState(
-    "i have an appointement tmrw at the doctor"
+    "i have an appointement tmrw at the doctor, and i have to go to Gafsa from ksar Hellal this weekend and on sunday i have a birthday part of my friend ayoub at 8 pm"
   )
-  const [events, setEvents] = useState<EventSkeleton[]>([])
-
-  const processEvents = useProcessEvents()
 
   const handleSend = async () => {
     if (!eventDetails.trim()) return
@@ -42,46 +30,12 @@ export default function MainPage() {
         userInput: eventDetails.trim(),
       })
 
-      if (result.success && result.events) {
-        const newEvents: EventSkeleton[] = result.events.map((event) => ({
-          id: event.id,
-          title: event.title,
-          startTime: new Date(event.startTime),
-          endTime: event.endTime ? new Date(event.endTime) : undefined,
-          time: `${new Date(event.startTime).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}${
-            event.endTime
-              ? " - " +
-                new Date(event.endTime).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : ""
-          }`,
-          description: "AI-generated event",
-          location: undefined,
-          category: undefined,
-          priority: undefined,
-        }))
-
-        setEvents((prev) => [...prev, ...newEvents])
+      if (result.success && result.events?.length) {
+        setEvents((prev) => [...prev, ...(result.events || [])])
         setEventDetails("")
       }
     } catch (error) {
       console.error("Failed to process event:", error)
-      // Fallback: create a simple event
-      const fallbackEvent: EventSkeleton = {
-        id: Date.now().toString(),
-        title: `📝 ${eventDetails.trim()}`,
-        time: "Time to be determined",
-        startTime: new Date(),
-        description:
-          "Failed to process with AI. Please try again or edit manually.",
-      }
-      setEvents((prev) => [...prev, fallbackEvent])
-      setEventDetails("")
     }
   }
 
@@ -161,7 +115,7 @@ export default function MainPage() {
   )
 }
 
-function EventCard({ event }: { event: EventSkeleton }) {
+function EventCard({ event }: { event: EventSimpleRo }) {
   const [copied, setCopied] = useState(false)
 
   const formatEventForCopy = () => {
@@ -208,7 +162,18 @@ function EventCard({ event }: { event: EventSkeleton }) {
         </h3>
         <div className="ml-4 flex items-center gap-2">
           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-400">
-            {event.time}
+            {`${event.startTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}${
+              event.endTime
+                ? " - " +
+                  event.endTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""
+            }`}
           </span>
           <TooltipProvider>
             <Tooltip>
@@ -234,7 +199,7 @@ function EventCard({ event }: { event: EventSkeleton }) {
         </div>
       </div>
 
-      {/* Real description or location if available */}
+      {/* Event details */}
       {(event.description || event.location) && (
         <div className="space-y-2">
           {event.location && (

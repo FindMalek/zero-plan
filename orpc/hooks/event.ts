@@ -13,7 +13,6 @@ import type {
   UpdateEventDto,
   UpdateEventRo,
 } from "@/schemas/event"
-import type { ProcessEventsDto, ProcessEventsRo } from "@/schemas/processing"
 import {
   useInfiniteQuery,
   useMutation,
@@ -108,28 +107,6 @@ export function useListEvents(input: ListEventsDto = { page: 1, limit: 20 }) {
     refetchOnWindowFocus: false,
   })
 }
-
-export function useProcessEvents() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (input: ProcessEventsDto) =>
-      orpc.events.processEvents.call(input),
-    onSuccess: (data: ProcessEventsRo) => {
-      if (data.success) {
-        queryClient.invalidateQueries({
-          queryKey: eventKeys.lists(),
-        })
-      }
-    },
-    onError: (error) => {
-      console.error("Failed to process events with AI:", error)
-    },
-  })
-}
-
-// Legacy hook for backwards compatibility
-export const useAIProcessEvent = useProcessEvents
 
 // Convenience hooks
 export function useEventsListInfinite(

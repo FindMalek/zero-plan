@@ -6,7 +6,8 @@ export const env = createEnv({
     DATABASE_URL: z.string().min(1).url(),
     NODE_ENV: z.enum(["development", "production"]),
     BETTER_AUTH_SECRET: z.string().min(10),
-    VOIDAI_API_KEY: z.string().min(10),
+    OPENAI_API_KEY: z.string().min(10),
+    OPENAI_URL: z.string().url(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -16,6 +17,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
-    VOIDAI_API_KEY: process.env.VOIDAI_API_KEY,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_URL: process.env.OPENAI_URL,
   },
 })

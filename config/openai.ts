@@ -3,8 +3,12 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { env } from "@/env"
 
 const client = createOpenAI({
-  baseURL: "https://api.voidai.app/v1/",
-  apiKey: env.VOIDAI_API_KEY,
+  baseURL: env.OPENAI_URL,
+  apiKey: env.OPENAI_API_KEY,
 })
 
-export { client }
+const MODEL_NAME = "gemini-2.5-flash"
+const PROVIDER_NAME = "al"
+const aiModel = client.chat(MODEL_NAME)
+
+export { client, aiModel, MODEL_NAME, PROVIDER_NAME }
