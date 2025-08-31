@@ -3,20 +3,17 @@
 import { orpc } from "@/orpc/client"
 import type {
   CreateEventDto,
-  GetEventDto,
-  UpdateEventDto,
-  DeleteEventDto,
-  ListEventsDto,
   CreateEventRo,
-  GetEventRo,
-  UpdateEventRo,
+  DeleteEventDto,
   DeleteEventRo,
+  GetEventDto,
+  GetEventRo,
+  ListEventsDto,
   ListEventsRo,
+  UpdateEventDto,
+  UpdateEventRo,
 } from "@/schemas/event"
-import type {
-  ProcessEventsDto,
-  ProcessEventsRo,
-} from "@/schemas/processing"
+import type { ProcessEventsDto, ProcessEventsRo } from "@/schemas/processing"
 import {
   useInfiniteQuery,
   useMutation,
@@ -39,8 +36,7 @@ export function useCreateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: CreateEventDto) =>
-      orpc.events.createEvent.call(input),
+    mutationFn: (input: CreateEventDto) => orpc.events.createEvent.call(input),
     onSuccess: (data: CreateEventRo) => {
       if (data.success) {
         queryClient.invalidateQueries({
@@ -58,8 +54,7 @@ export function useUpdateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: UpdateEventDto) =>
-      orpc.events.updateEvent.call(input),
+    mutationFn: (input: UpdateEventDto) => orpc.events.updateEvent.call(input),
     onSuccess: (data: UpdateEventRo, variables: UpdateEventDto) => {
       if (data.success) {
         queryClient.invalidateQueries({
@@ -88,8 +83,7 @@ export function useDeleteEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: DeleteEventDto) =>
-      orpc.events.deleteEvent.call(input),
+    mutationFn: (input: DeleteEventDto) => orpc.events.deleteEvent.call(input),
     onSuccess: (data: DeleteEventRo, variables: DeleteEventDto) => {
       if (data.success) {
         queryClient.removeQueries({

@@ -1,30 +1,30 @@
 import { database } from "@/prisma/client"
 import {
   createEventDto,
-  getEventDto,
-  updateEventDto,
-  deleteEventDto,
-  listEventsDto,
   CreateEventDto,
-  GetEventDto,
-  UpdateEventDto,
-  DeleteEventDto,
-  ListEventsDto,
   createEventRo,
-  getEventRo,
-  updateEventRo,
-  deleteEventRo,
-  listEventsRo,
   CreateEventRo,
-  GetEventRo,
-  UpdateEventRo,
+  deleteEventDto,
+  DeleteEventDto,
+  deleteEventRo,
   DeleteEventRo,
+  getEventDto,
+  GetEventDto,
+  getEventRo,
+  GetEventRo,
+  listEventsDto,
+  ListEventsDto,
+  listEventsRo,
   ListEventsRo,
+  updateEventDto,
+  UpdateEventDto,
+  updateEventRo,
+  UpdateEventRo,
 } from "@/schemas/event"
 import {
   processEventsDto,
-  processEventsRo,
   ProcessEventsDto,
+  processEventsRo,
   ProcessEventsRo,
 } from "@/schemas/processing"
 import { createOpenAI } from "@ai-sdk/openai"
@@ -32,15 +32,10 @@ import { ORPCError, os } from "@orpc/server"
 import { generateText } from "ai"
 import { z } from "zod"
 
-import { env } from "@/env"
+
+import { client as aiClient } from "@/config/openai"
 
 import type { ORPCContext } from "../types"
-
-// Create VoidAI client using OpenAI provider with custom base URL
-const voidai = createOpenAI({
-  baseURL: "https://api.voidai.app/v1/",
-  apiKey: env.VOIDAI_API_KEY,
-})
 
 const baseProcedure = os.$context<ORPCContext>()
 
@@ -52,34 +47,6 @@ const privateProcedure = baseProcedure.use(({ context, next }) => {
   return next({ context: { ...context, user: context.user } })
 })
 
-// Schema for AI output - supports multiple events
-const aiEventOutputSchema = z.object({
-  events: z
-    .array(
-      z.object({
-        title: z
-          .string()
-          .min(1)
-          .max(200)
-          .describe(
-            "Title with emoji prefix (1-2 emojis) describing the event"
-          ),
-        description: z
-          .string()
-          .max(1000)
-          .optional()
-          .describe("Meaningful description, not placeholder text"),
-        startTime: z.string().datetime(),
-        endTime: z.string().datetime().optional(),
-        location: z.string().max(500).optional(),
-        confidence: z.number().min(0).max(1),
-      })
-    )
-    .min(1)
-    .describe(
-      "Array of events - can be multiple if the input describes several events"
-    ),
-})
 
 // Create Event
 export const createEvent = privateProcedure
@@ -291,7 +258,9 @@ export const getEvent = privateProcedure
                 id: event.recurrence.id,
                 pattern: event.recurrence.pattern,
                 endDate: event.recurrence.endDate || undefined,
-                customRule: event.recurrence.customRule as Record<string, string | number | boolean> | undefined,
+                customRule: event.recurrence.customRule as
+                  | Record<string, string | number | boolean>
+                  | undefined,
                 createdAt: event.recurrence.createdAt,
                 updatedAt: event.recurrence.updatedAt,
                 eventId: event.recurrence.eventId,
@@ -393,15 +362,18 @@ export const updateEvent = privateProcedure
       const updateData: any = {}
       if (input.emoji !== undefined) updateData.emoji = input.emoji
       if (input.title !== undefined) updateData.title = input.title
-      if (input.description !== undefined) updateData.description = input.description
+      if (input.description !== undefined)
+        updateData.description = input.description
       if (startTime !== undefined) updateData.startTime = startTime
       if (endTime !== undefined) updateData.endTime = endTime
       if (input.timezone !== undefined) updateData.timezone = input.timezone
       if (input.isAllDay !== undefined) updateData.isAllDay = input.isAllDay
       if (input.location !== undefined) updateData.location = input.location
-      if (input.maxParticipants !== undefined) updateData.maxParticipants = input.maxParticipants
+      if (input.maxParticipants !== undefined)
+        updateData.maxParticipants = input.maxParticipants
       if (input.links !== undefined) updateData.links = input.links
-      if (input.calendarId !== undefined) updateData.calendarId = input.calendarId
+      if (input.calendarId !== undefined)
+        updateData.calendarId = input.calendarId
 
       const event = await database.event.update({
         where: { id: input.id },
@@ -664,10 +636,10 @@ export const processEvents = baseProcedure
 
         // Use VoidAI to process the event with structured output
         const response = await generateText({
-          model: voidai.chat("gpt-4o-mini") as any,
+          model: aiClient.chat("gpt-4o-mini"),
           messages: [
             {
-              role: "user", 
+              role: "user",
               content: `You are an intelligent event planning assistant. Parse natural language input into structured events with emoji-prefixed titles. Always respond with valid JSON only.
 
 Current date and time: ${currentDateTime}
@@ -724,9 +696,14 @@ RESPOND WITH VALID JSON ONLY in this exact format:
               events: [
                 {
                   title: `📅 ${input.userInput}`,
-                  description: "Event created from user input (AI parsing failed)",
-                  startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                  endTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(),
+                  description:
+                    "Event created from user input (AI parsing failed)",
+                  startTime: new Date(
+                    Date.now() + 24 * 60 * 60 * 1000
+                  ).toISOString(),
+                  endTime: new Date(
+                    Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000
+                  ).toISOString(),
                   location: undefined,
                   confidence: 0.5,
                 },
@@ -762,16 +739,39 @@ RESPOND WITH VALID JSON ONLY in this exact format:
           userId = testUserId
         }
 
+        // Get or create user's default calendar
+        let defaultCalendar = await database.calendar.findFirst({
+          where: {
+            userId: userId,
+            name: "Personal", // Default calendar name
+          },
+        })
+
+        if (!defaultCalendar) {
+          defaultCalendar = await database.calendar.create({
+            data: {
+              name: "Personal",
+              color: "#3B82F6", // Blue color
+              emoji: "📅",
+              userId: userId,
+            },
+          })
+        }
+
         // Create processing session
         const processingSession = await database.inputProcessingSession.create({
           data: {
             userInput: input.userInput,
             processedOutput: result.object,
-            model: input.model || "gpt-4o-mini",
-            provider: input.provider || "voidai",
+            model: "gpt-4o-mini", // Default model
+            provider: "voidai", // Default provider
             status: "COMPLETED",
             processingTimeMs: processingTime,
-            confidence: result.object.events.reduce((sum, event) => sum + event.confidence, 0) / result.object.events.length,
+            confidence:
+              result.object.events.reduce(
+                (sum, event) => sum + event.confidence,
+                0
+              ) / result.object.events.length,
             userId: userId,
           },
         })
@@ -793,7 +793,7 @@ RESPOND WITH VALID JSON ONLY in this exact format:
               location: eventData.location,
               aiConfidence: eventData.confidence,
               userId: userId,
-              calendarId: input.calendarId,
+              calendarId: defaultCalendar.id,
               links: [], // Default empty array
             },
             include: {

@@ -1,242 +1,117 @@
-import {
-  eventCategoryEnum,
-  EventCategoryInfer,
-  eventPriorityEnum,
-  EventPriorityInfer,
-  EventSimpleRo,
-  eventStatusEnum,
-  EventStatusInfer,
-} from "@/schemas/event"
+import { EventFullRo, EventRo, EventSimpleRo } from "@/schemas/event"
 
-import { EventEntitySimpleDbData } from "./query"
-
-// Using string literals for now - these will be available after database creation
-type EventStatus =
-  | "PLANNED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "CANCELLED"
-  | "POSTPONED"
-type EventPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT"
-type EventCategory =
-  | "PERSONAL"
-  | "WORK"
-  | "MEETING"
-  | "APPOINTMENT"
-  | "REMINDER"
-  | "SOCIAL"
-  | "TRAVEL"
-  | "HEALTH"
-  | "EDUCATION"
-  | "OTHER"
-
+/**
+ * Event Entity - Pure data transformation for Event operations
+ */
 export class EventEntity {
-  static getSimpleRo(entity: EventEntitySimpleDbData): EventSimpleRo {
+  /**
+   * Convert database result to EventSimpleRo
+   */
+  static toSimpleRo(data: any): EventSimpleRo {
     return {
-      id: entity.id,
-      title: entity.title,
-      description: entity.description || undefined,
-      startTime: entity.startTime,
-      endTime: entity.endTime || undefined,
-      location: entity.location || undefined,
-      status: this.convertPrismaToEventStatus(entity.status as EventStatus),
-      priority: this.convertPrismaToEventPriority(
-        entity.priority as EventPriority
-      ),
-      category: this.convertPrismaToEventCategory(
-        entity.category as EventCategory
-      ),
-      originalInput: entity.originalInput || undefined,
-      aiProcessed: entity.aiProcessed,
-      aiConfidence: entity.aiConfidence || undefined,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-      userId: entity.userId,
+      id: data.id,
+      emoji: data.emoji,
+      title: data.title,
+      description: data.description || undefined,
+      startTime: data.startTime,
+      endTime: data.endTime || undefined,
+      timezone: data.timezone,
+      isAllDay: data.isAllDay,
+      location: data.location || undefined,
+      maxParticipants: data.maxParticipants || undefined,
+      links: data.links || [],
+      documents: data.documents || [],
+      aiConfidence: data.aiConfidence || undefined,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      userId: data.userId,
+      calendarId: data.calendarId,
     }
   }
 
-  static convertPrismaToEventStatus(status: EventStatus): EventStatusInfer {
-    switch (status) {
-      case "PLANNED":
-        return eventStatusEnum.PLANNED
-      case "IN_PROGRESS":
-        return eventStatusEnum.IN_PROGRESS
-      case "COMPLETED":
-        return eventStatusEnum.COMPLETED
-      case "CANCELLED":
-        return eventStatusEnum.CANCELLED
-      case "POSTPONED":
-        return eventStatusEnum.POSTPONED
-      default:
-        return eventStatusEnum.PLANNED
+  /**
+   * Convert database result to EventRo (with calendar info)
+   */
+  static toRo(data: any): EventRo {
+    return {
+      ...this.toSimpleRo(data),
+      calendar: data.calendar
+        ? {
+            id: data.calendar.id,
+            name: data.calendar.name,
+            color: data.calendar.color,
+            emoji: data.calendar.emoji,
+          }
+        : undefined,
     }
   }
 
-  static convertEventStatusToPrisma(status: EventStatusInfer): EventStatus {
-    switch (status) {
-      case eventStatusEnum.PLANNED:
-        return "PLANNED"
-      case eventStatusEnum.IN_PROGRESS:
-        return "IN_PROGRESS"
-      case eventStatusEnum.COMPLETED:
-        return "COMPLETED"
-      case eventStatusEnum.CANCELLED:
-        return "CANCELLED"
-      case eventStatusEnum.POSTPONED:
-        return "POSTPONED"
-      default:
-        return "PLANNED"
-    }
-  }
-
-  static convertPrismaToEventPriority(
-    priority: EventPriority
-  ): EventPriorityInfer {
-    switch (priority) {
-      case "LOW":
-        return eventPriorityEnum.LOW
-      case "MEDIUM":
-        return eventPriorityEnum.MEDIUM
-      case "HIGH":
-        return eventPriorityEnum.HIGH
-      case "URGENT":
-        return eventPriorityEnum.URGENT
-      default:
-        return eventPriorityEnum.MEDIUM
-    }
-  }
-
-  static convertEventPriorityToPrisma(
-    priority: EventPriorityInfer
-  ): EventPriority {
-    switch (priority) {
-      case eventPriorityEnum.LOW:
-        return "LOW"
-      case eventPriorityEnum.MEDIUM:
-        return "MEDIUM"
-      case eventPriorityEnum.HIGH:
-        return "HIGH"
-      case eventPriorityEnum.URGENT:
-        return "URGENT"
-      default:
-        return "MEDIUM"
-    }
-  }
-
-  static convertPrismaToEventCategory(
-    category: EventCategory
-  ): EventCategoryInfer {
-    switch (category) {
-      case "PERSONAL":
-        return eventCategoryEnum.PERSONAL
-      case "WORK":
-        return eventCategoryEnum.WORK
-      case "MEETING":
-        return eventCategoryEnum.MEETING
-      case "APPOINTMENT":
-        return eventCategoryEnum.APPOINTMENT
-      case "REMINDER":
-        return eventCategoryEnum.REMINDER
-      case "SOCIAL":
-        return eventCategoryEnum.SOCIAL
-      case "TRAVEL":
-        return eventCategoryEnum.TRAVEL
-      case "HEALTH":
-        return eventCategoryEnum.HEALTH
-      case "EDUCATION":
-        return eventCategoryEnum.EDUCATION
-      case "OTHER":
-        return eventCategoryEnum.OTHER
-      default:
-        return eventCategoryEnum.PERSONAL
-    }
-  }
-
-  static convertEventCategoryToPrisma(
-    category: EventCategoryInfer
-  ): EventCategory {
-    switch (category) {
-      case eventCategoryEnum.PERSONAL:
-        return "PERSONAL"
-      case eventCategoryEnum.WORK:
-        return "WORK"
-      case eventCategoryEnum.MEETING:
-        return "MEETING"
-      case eventCategoryEnum.APPOINTMENT:
-        return "APPOINTMENT"
-      case eventCategoryEnum.REMINDER:
-        return "REMINDER"
-      case eventCategoryEnum.SOCIAL:
-        return "SOCIAL"
-      case eventCategoryEnum.TRAVEL:
-        return "TRAVEL"
-      case eventCategoryEnum.HEALTH:
-        return "HEALTH"
-      case eventCategoryEnum.EDUCATION:
-        return "EDUCATION"
-      case eventCategoryEnum.OTHER:
-        return "OTHER"
-      default:
-        return "PERSONAL"
-    }
-  }
-
-  static convertEventStatusToString(status: EventStatusInfer): string {
-    switch (status) {
-      case eventStatusEnum.PLANNED:
-        return "Planned"
-      case eventStatusEnum.IN_PROGRESS:
-        return "In Progress"
-      case eventStatusEnum.COMPLETED:
-        return "Completed"
-      case eventStatusEnum.CANCELLED:
-        return "Cancelled"
-      case eventStatusEnum.POSTPONED:
-        return "Postponed"
-      default:
-        return "Unknown"
-    }
-  }
-
-  static convertEventPriorityToString(priority: EventPriorityInfer): string {
-    switch (priority) {
-      case eventPriorityEnum.LOW:
-        return "Low"
-      case eventPriorityEnum.MEDIUM:
-        return "Medium"
-      case eventPriorityEnum.HIGH:
-        return "High"
-      case eventPriorityEnum.URGENT:
-        return "Urgent"
-      default:
-        return "Unknown"
-    }
-  }
-
-  static convertEventCategoryToString(category: EventCategoryInfer): string {
-    switch (category) {
-      case eventCategoryEnum.PERSONAL:
-        return "Personal"
-      case eventCategoryEnum.WORK:
-        return "Work"
-      case eventCategoryEnum.MEETING:
-        return "Meeting"
-      case eventCategoryEnum.APPOINTMENT:
-        return "Appointment"
-      case eventCategoryEnum.REMINDER:
-        return "Reminder"
-      case eventCategoryEnum.SOCIAL:
-        return "Social"
-      case eventCategoryEnum.TRAVEL:
-        return "Travel"
-      case eventCategoryEnum.HEALTH:
-        return "Health"
-      case eventCategoryEnum.EDUCATION:
-        return "Education"
-      case eventCategoryEnum.OTHER:
-        return "Other"
-      default:
-        return "Unknown"
+  /**
+   * Convert database result to EventFullRo (with all relations)
+   */
+  static toFullRo(data: any): EventFullRo {
+    return {
+      ...this.toSimpleRo(data),
+      calendar: data.calendar
+        ? {
+            id: data.calendar.id,
+            name: data.calendar.name,
+            color: data.calendar.color,
+            emoji: data.calendar.emoji,
+            userId: data.calendar.userId,
+          }
+        : undefined,
+      recurrence: data.recurrence
+        ? {
+            id: data.recurrence.id,
+            pattern: data.recurrence.pattern,
+            endDate: data.recurrence.endDate || undefined,
+            customRule: data.recurrence.customRule as
+              | Record<string, string | number | boolean>
+              | undefined,
+            createdAt: data.recurrence.createdAt,
+            updatedAt: data.recurrence.updatedAt,
+            eventId: data.recurrence.eventId,
+          }
+        : undefined,
+      reminders: data.reminders?.map((reminder: any) => ({
+        id: reminder.id,
+        value: reminder.value,
+        unit: reminder.unit,
+        createdAt: reminder.createdAt,
+        updatedAt: reminder.updatedAt,
+        eventId: reminder.eventId,
+      })),
+      conference: data.conference
+        ? {
+            id: data.conference.id,
+            meetingRoom: data.conference.meetingRoom || undefined,
+            conferenceLink: data.conference.conferenceLink || undefined,
+            conferenceId: data.conference.conferenceId || undefined,
+            dialInNumber: data.conference.dialInNumber || undefined,
+            accessCode: data.conference.accessCode || undefined,
+            hostKey: data.conference.hostKey || undefined,
+            isRecorded: data.conference.isRecorded,
+            maxDuration: data.conference.maxDuration || undefined,
+            createdAt: data.conference.createdAt,
+            updatedAt: data.conference.updatedAt,
+            eventId: data.conference.eventId,
+          }
+        : undefined,
+      participants: data.participants?.map((participant: any) => ({
+        id: participant.id,
+        email: participant.email,
+        name: participant.name || undefined,
+        role: participant.role,
+        rsvpStatus: participant.rsvpStatus,
+        isOrganizer: participant.isOrganizer,
+        notes: participant.notes || undefined,
+        invitedAt: participant.invitedAt,
+        respondedAt: participant.respondedAt || undefined,
+        createdAt: participant.createdAt,
+        updatedAt: participant.updatedAt,
+        eventId: participant.eventId,
+      })),
     }
   }
 }

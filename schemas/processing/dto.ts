@@ -78,9 +78,6 @@ export const processEventsDto = z.object({
     .string()
     .min(1, "Input text is required")
     .max(2000, "Input must be less than 2000 characters"),
-  model: z.string().optional().default("gpt-4"),
-  provider: z.string().optional().default("openai"),
-  calendarId: z.string().uuid("Calendar ID is required"),
 })
 
 export type ProcessEventsDto = z.infer<typeof processEventsDto>

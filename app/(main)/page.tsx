@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { useProcessEvents } from "@/orpc/hooks/event"
-import { Check, Copy, Loader2, Mic, Send } from "lucide-react"
 
+import { Icons } from "@/components/shared/icons"
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,19 +26,7 @@ interface EventSkeleton {
   priority?: string
 }
 
-// Type for API response event
-interface ApiEventResponse {
-  id: string
-  title: string
-  startTime: string
-  endTime?: string
-  description?: string
-  location?: string
-  category?: string
-  priority?: string
-}
-
-export default function ZeroPlannerPage() {
+export default function MainPage() {
   const [eventDetails, setEventDetails] = useState(
     "i have an appointement tmrw at the doctor"
   )
@@ -52,36 +40,31 @@ export default function ZeroPlannerPage() {
     try {
       const result = await processEvents.mutateAsync({
         userInput: eventDetails.trim(),
-        model: "gpt-4o-mini",
-        provider: "voidai",
-        calendarId: "default-calendar-id", // TODO: Get from user's default calendar
       })
 
       if (result.success && result.events) {
-        const newEvents: EventSkeleton[] = result.events.map(
-          (event: any) => ({
-            id: event.id,
-            title: event.title,
-            startTime: new Date(event.startTime),
-            endTime: event.endTime ? new Date(event.endTime) : undefined,
-            time: `${new Date(event.startTime).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}${
-              event.endTime
-                ? " - " +
-                  new Date(event.endTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : ""
-            }`,
-            description: "AI-generated event",
-            location: undefined,
-            category: undefined,
-            priority: undefined,
-          })
-        )
+        const newEvents: EventSkeleton[] = result.events.map((event: any) => ({
+          id: event.id,
+          title: event.title,
+          startTime: new Date(event.startTime),
+          endTime: event.endTime ? new Date(event.endTime) : undefined,
+          time: `${new Date(event.startTime).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}${
+            event.endTime
+              ? " - " +
+                new Date(event.endTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : ""
+          }`,
+          description: "AI-generated event",
+          location: undefined,
+          category: undefined,
+          priority: undefined,
+        }))
 
         setEvents((prev) => [...prev, ...newEvents])
         setEventDetails("")
@@ -142,11 +125,11 @@ export default function ZeroPlannerPage() {
                     className="absolute bottom-3 right-3 h-8 w-8 rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-0 text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-900 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {processEvents.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Icons.spinner className="h-4 w-4 animate-spin" />
                     ) : eventDetails.trim() ? (
-                      <Send className="h-4 w-4" />
+                      <Icons.send className="h-4 w-4" />
                     ) : (
-                      <Mic className="h-4 w-4" />
+                      <Icons.microphone className="h-4 w-4" />
                     )}
                   </Button>
                 </TooltipTrigger>
@@ -237,9 +220,9 @@ function EventCard({ event }: { event: EventSkeleton }) {
                   className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 >
                   {copied ? (
-                    <Check className="h-4 w-4" />
+                    <Icons.check className="h-4 w-4" />
                   ) : (
-                    <Copy className="h-4 w-4" />
+                    <Icons.copy className="h-4 w-4" />
                   )}
                 </Button>
               </TooltipTrigger>
