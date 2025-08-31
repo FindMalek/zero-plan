@@ -201,6 +201,25 @@ CRITICAL: Extract specific details, use tools for context, then provide detailed
         const createdEvents = []
 
         for (const eventData of aiResponse.events) {
+          // Ensure timezone is valid (fallback to UTC if invalid)
+          const validTimezones = [
+            "UTC",
+            "AMERICA_NEW_YORK",
+            "AMERICA_CHICAGO",
+            "AMERICA_DENVER",
+            "AMERICA_LOS_ANGELES",
+            "EUROPE_LONDON",
+            "EUROPE_PARIS",
+            "EUROPE_BERLIN",
+            "ASIA_TOKYO",
+            "ASIA_SINGAPORE",
+            "ASIA_DUBAI",
+            "AUSTRALIA_SYDNEY",
+          ]
+          const timezone = validTimezones.includes(eventData.timezone)
+            ? eventData.timezone
+            : "UTC"
+
           const event = await database.event.create({
             data: {
               emoji: eventData.emoji,
@@ -210,7 +229,7 @@ CRITICAL: Extract specific details, use tools for context, then provide detailed
               endTime: eventData.endTime
                 ? new Date(eventData.endTime)
                 : undefined,
-              timezone: eventData.timezone,
+              timezone: timezone,
               isAllDay: eventData.isAllDay,
               location: eventData.location,
               maxParticipants: eventData.maxParticipants,
@@ -391,7 +410,8 @@ Instructions:
 - Extract all possible events from the input
 - Use appropriate emojis for each event type
 - Set realistic start/end times based on current date/time
-- Infer timezone from location hints or use UTC as default
+- IMPORTANT: Only use these valid timezones: UTC, AMERICA_NEW_YORK, AMERICA_CHICAGO, AMERICA_DENVER, AMERICA_LOS_ANGELES, EUROPE_LONDON, EUROPE_PARIS, EUROPE_BERLIN, ASIA_TOKYO, ASIA_SINGAPORE, ASIA_DUBAI, AUSTRALIA_SYDNEY
+- If location suggests Africa/Middle East, use EUROPE_PARIS timezone
 - Set confidence scores based on how clearly specified each event is
 - Use isAllDay=true for events without specific times
 - Include location if mentioned or can be inferred`,
@@ -414,6 +434,25 @@ Instructions:
         const createdEvents = []
 
         for (const eventData of aiResponse.events) {
+          // Ensure timezone is valid (fallback to UTC if invalid)
+          const validTimezones = [
+            "UTC",
+            "AMERICA_NEW_YORK",
+            "AMERICA_CHICAGO",
+            "AMERICA_DENVER",
+            "AMERICA_LOS_ANGELES",
+            "EUROPE_LONDON",
+            "EUROPE_PARIS",
+            "EUROPE_BERLIN",
+            "ASIA_TOKYO",
+            "ASIA_SINGAPORE",
+            "ASIA_DUBAI",
+            "AUSTRALIA_SYDNEY",
+          ]
+          const timezone = validTimezones.includes(eventData.timezone)
+            ? eventData.timezone
+            : "UTC"
+
           const event = await database.event.create({
             data: {
               emoji: eventData.emoji,
@@ -423,7 +462,7 @@ Instructions:
               endTime: eventData.endTime
                 ? new Date(eventData.endTime)
                 : undefined,
-              timezone: eventData.timezone,
+              timezone: timezone,
               isAllDay: eventData.isAllDay,
               location: eventData.location,
               maxParticipants: eventData.maxParticipants,

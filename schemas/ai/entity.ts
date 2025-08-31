@@ -16,7 +16,11 @@ export const aiEventSchema = createEventDto
       .string()
       .optional()
       .describe("ISO 8601 end date/time for the event"),
-    timezone: timezoneSchema.default("UTC").describe("Timezone for the event"),
+    timezone: timezoneSchema
+      .default("UTC")
+      .describe(
+        "Timezone for the event - must be one of: UTC, AMERICA_NEW_YORK, AMERICA_CHICAGO, AMERICA_DENVER, AMERICA_LOS_ANGELES, EUROPE_LONDON, EUROPE_PARIS, EUROPE_BERLIN, ASIA_TOKYO, ASIA_SINGAPORE, ASIA_DUBAI, AUSTRALIA_SYDNEY"
+      ),
     confidence: z
       .number()
       .min(0)
