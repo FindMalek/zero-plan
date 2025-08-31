@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useAIProcessEvent } from "@/orpc/hooks/event"
+import { useProcessEvents } from "@/orpc/hooks/event"
 import { Check, Copy, Loader2, Mic, Send } from "lucide-react"
 
 import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern"
@@ -44,21 +44,22 @@ export default function ZeroPlannerPage() {
   )
   const [events, setEvents] = useState<EventSkeleton[]>([])
 
-  const aiProcessEvent = useAIProcessEvent()
+  const processEvents = useProcessEvents()
 
   const handleSend = async () => {
     if (!eventDetails.trim()) return
 
     try {
-      const result = await aiProcessEvent.mutateAsync({
-        rawInput: eventDetails.trim(),
-        model: "llama-3.1-8b-instant",
-        provider: "groq",
+      const result = await processEvents.mutateAsync({
+        userInput: eventDetails.trim(),
+        model: "gpt-4o-mini",
+        provider: "voidai",
+        calendarId: "default-calendar-id", // TODO: Get from user's default calendar
       })
 
       if (result.success && result.events) {
         const newEvents: EventSkeleton[] = result.events.map(
-          (event: ApiEventResponse) => ({
+          (event: any) => ({
             id: event.id,
             title: event.title,
             startTime: new Date(event.startTime),
@@ -75,10 +76,10 @@ export default function ZeroPlannerPage() {
                   })
                 : ""
             }`,
-            description: event.description,
-            location: event.location,
-            category: event.category,
-            priority: event.priority,
+            description: "AI-generated event",
+            location: undefined,
+            category: undefined,
+            priority: undefined,
           })
         )
 
@@ -128,7 +129,7 @@ export default function ZeroPlannerPage() {
               value={eventDetails}
               onChange={(e) => setEventDetails(e.target.value)}
               placeholder="Type or paste your event details here... (e.g., 'Coffee meeting with John tomorrow at 3pm')"
-              disabled={aiProcessEvent.isPending}
+              disabled={processEvents.isPending}
               className="min-h-[120px] resize-none rounded-xl border-slate-200 bg-white pr-12 text-base text-slate-900 shadow-sm transition-all duration-200 focus:border-blue-400 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             />
 
@@ -137,10 +138,10 @@ export default function ZeroPlannerPage() {
                 <TooltipTrigger asChild>
                   <Button
                     onClick={handleSend}
-                    disabled={aiProcessEvent.isPending || !eventDetails.trim()}
+                    disabled={processEvents.isPending || !eventDetails.trim()}
                     className="absolute bottom-3 right-3 h-8 w-8 rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 p-0 text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-900 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {aiProcessEvent.isPending ? (
+                    {processEvents.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : eventDetails.trim() ? (
                       <Send className="h-4 w-4" />

@@ -2,19 +2,21 @@
 
 import { orpc } from "@/orpc/client"
 import type {
-  AIProcessEventInput,
-  AIProcessEventOutput,
-  CreateEventInput,
-  CreateEventOutput,
-  DeleteEventInput,
-  DeleteEventOutput,
-  GetEventInput,
-  GetEventOutput,
-  ListEventsInput,
-  ListEventsOutput,
-  UpdateEventInput,
-  UpdateEventOutput,
+  CreateEventDto,
+  GetEventDto,
+  UpdateEventDto,
+  DeleteEventDto,
+  ListEventsDto,
+  CreateEventRo,
+  GetEventRo,
+  UpdateEventRo,
+  DeleteEventRo,
+  ListEventsRo,
 } from "@/schemas/event"
+import type {
+  ProcessEventsDto,
+  ProcessEventsRo,
+} from "@/schemas/processing"
 import {
   useInfiniteQuery,
   useMutation,
@@ -26,7 +28,7 @@ import {
 export const eventKeys = {
   all: ["events"] as const,
   lists: () => [...eventKeys.all, "list"] as const,
-  list: (filters: Partial<ListEventsInput>) =>
+  list: (filters: Partial<ListEventsDto>) =>
     [...eventKeys.lists(), filters] as const,
   details: () => [...eventKeys.all, "detail"] as const,
   detail: (id: string) => [...eventKeys.details(), id] as const,
@@ -37,9 +39,9 @@ export function useCreateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: CreateEventInput) =>
+    mutationFn: (input: CreateEventDto) =>
       orpc.events.createEvent.call(input),
-    onSuccess: (data: CreateEventOutput) => {
+    onSuccess: (data: CreateEventRo) => {
       if (data.success) {
         queryClient.invalidateQueries({
           queryKey: eventKeys.lists(),
@@ -56,9 +58,9 @@ export function useUpdateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: UpdateEventInput) =>
+    mutationFn: (input: UpdateEventDto) =>
       orpc.events.updateEvent.call(input),
-    onSuccess: (data: UpdateEventOutput, variables: UpdateEventInput) => {
+    onSuccess: (data: UpdateEventRo, variables: UpdateEventDto) => {
       if (data.success) {
         queryClient.invalidateQueries({
           queryKey: eventKeys.detail(variables.id),
@@ -74,7 +76,7 @@ export function useUpdateEvent() {
   })
 }
 
-export function useGetEvent(input: GetEventInput) {
+export function useGetEvent(input: GetEventDto) {
   return useQuery({
     queryKey: eventKeys.detail(input.id),
     queryFn: () => orpc.events.getEvent.call(input),
@@ -86,9 +88,9 @@ export function useDeleteEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: DeleteEventInput) =>
+    mutationFn: (input: DeleteEventDto) =>
       orpc.events.deleteEvent.call(input),
-    onSuccess: (data: DeleteEventOutput, variables: DeleteEventInput) => {
+    onSuccess: (data: DeleteEventRo, variables: DeleteEventDto) => {
       if (data.success) {
         queryClient.removeQueries({
           queryKey: eventKeys.detail(variables.id),
@@ -104,7 +106,7 @@ export function useDeleteEvent() {
   })
 }
 
-export function useListEvents(input: ListEventsInput = { page: 1, limit: 20 }) {
+export function useListEvents(input: ListEventsDto = { page: 1, limit: 20 }) {
   return useQuery({
     queryKey: eventKeys.list(input),
     queryFn: () => orpc.events.listEvents.call(input),
@@ -113,13 +115,13 @@ export function useListEvents(input: ListEventsInput = { page: 1, limit: 20 }) {
   })
 }
 
-export function useAIProcessEvent() {
+export function useProcessEvents() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: AIProcessEventInput) =>
-      orpc.events.aiProcessEvent.call(input),
-    onSuccess: (data: AIProcessEventOutput) => {
+    mutationFn: (input: ProcessEventsDto) =>
+      orpc.events.processEvents.call(input),
+    onSuccess: (data: ProcessEventsRo) => {
       if (data.success) {
         queryClient.invalidateQueries({
           queryKey: eventKeys.lists(),
@@ -127,14 +129,17 @@ export function useAIProcessEvent() {
       }
     },
     onError: (error) => {
-      console.error("Failed to process event with AI:", error)
+      console.error("Failed to process events with AI:", error)
     },
   })
 }
 
+// Legacy hook for backwards compatibility
+export const useAIProcessEvent = useProcessEvents
+
 // Convenience hooks
 export function useEventsListInfinite(
-  input: Omit<ListEventsInput, "page"> = { limit: 20 }
+  input: Omit<ListEventsDto, "page"> = { limit: 20 }
 ) {
   return useInfiniteQuery({
     queryKey: eventKeys.list(input),
