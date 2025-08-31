@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { calendarSimpleRo } from "../calendar"
 import {
   participantRoleSchema,
   reminderUnitSchema,
@@ -25,12 +26,6 @@ export const eventSimpleRo = z.object({
   location: z.string().optional(),
   maxParticipants: z.number().optional(),
   links: z.array(z.string()).optional(),
-  documents: z.array(z.string()).optional(),
-  aiConfidence: z.number().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  userId: z.string(),
-  calendarId: z.string(),
 })
 
 export type EventSimpleRo = z.infer<typeof eventSimpleRo>
@@ -100,29 +95,14 @@ export type EventParticipantRo = z.infer<typeof eventParticipantRo>
 
 // Event RO (With some key relations - calendar info)
 export const eventRo = eventSimpleRo.extend({
-  calendar: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      color: z.string(),
-      emoji: z.string(),
-    })
-    .optional(),
+  calendar: calendarSimpleRo.optional(),
 })
 
 export type EventRo = z.infer<typeof eventRo>
 
 // Event Full RO (With ALL relations)
 export const eventFullRo = eventSimpleRo.extend({
-  calendar: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      color: z.string(),
-      emoji: z.string(),
-      userId: z.string(),
-    })
-    .optional(),
+  calendar: calendarSimpleRo.optional(),
   recurrence: eventRecurrenceRo.optional(),
   reminders: z.array(eventReminderRo).optional(),
   conference: eventConferenceRo.optional(),

@@ -1,24 +1,19 @@
+import { CalendarQuery } from "@/entities/calendar"
 import { Prisma } from "@/prisma/client"
 
 export type EventEntitySimpleSelect = Prisma.EventGetPayload<{
   select: ReturnType<typeof EventQuery.getSimpleSelect>
 }>
 
-export type EventEntityStandardSelect = Prisma.EventGetPayload<{
-  select: ReturnType<typeof EventQuery.getStandardSelect>
+export type EventEntitySelect = Prisma.EventGetPayload<{
+  select: ReturnType<typeof EventQuery.getSelect>
 }>
 
 export type EventEntityFullSelect = Prisma.EventGetPayload<{
   select: ReturnType<typeof EventQuery.getFullSelect>
 }>
 
-/**
- * Event Query Selectors - Prisma select objects for different use cases
- */
 export class EventQuery {
-  /**
-   * Simple select - basic event fields without relations
-   */
   static getSimpleSelect() {
     return {
       id: true,
@@ -32,46 +27,21 @@ export class EventQuery {
       location: true,
       maxParticipants: true,
       links: true,
-      aiConfidence: true,
-      createdAt: true,
-      updatedAt: true,
-      userId: true,
-      calendarId: true,
     } satisfies Prisma.EventSelect
   }
 
-  /**
-   * Standard select - includes calendar info
-   */
-  static getStandardSelect() {
+  static getSelect() {
     return {
       ...this.getSimpleSelect(),
       calendar: {
-        select: {
-          id: true,
-          name: true,
-          color: true,
-          emoji: true,
-        },
+        select: CalendarQuery.getSimpleSelect(),
       },
     } satisfies Prisma.EventSelect
   }
 
-  /**
-   * Full select - includes all relations
-   */
   static getFullSelect() {
     return {
-      ...this.getSimpleSelect(),
-      calendar: {
-        select: {
-          id: true,
-          name: true,
-          color: true,
-          emoji: true,
-          userId: true,
-        },
-      },
+      ...this.getSelect(),
       recurrence: {
         select: {
           id: true,
@@ -128,5 +98,3 @@ export class EventQuery {
     } satisfies Prisma.EventSelect
   }
 }
-
-// Type definitions for the select results

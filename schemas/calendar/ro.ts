@@ -11,11 +11,6 @@ export const calendarSimpleRo = z.object({
   description: z.string().optional(),
   color: z.string(),
   emoji: z.string(),
-  isDefault: z.boolean(),
-  isActive: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  userId: z.string(),
 })
 
 export type CalendarSimpleRo = z.infer<typeof calendarSimpleRo>

@@ -1,6 +1,5 @@
-export * from "./analytics"
 export * from "./calendar"
-export * from "./event"
+export * from "./events"
 export * from "./processing"
 export * from "./user"
 export * from "./waitlist"

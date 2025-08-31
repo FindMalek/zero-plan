@@ -32,7 +32,6 @@ import { ORPCError, os } from "@orpc/server"
 import { generateText } from "ai"
 import { z } from "zod"
 
-
 import { client as aiClient } from "@/config/openai"
 
 import type { ORPCContext } from "../types"
@@ -46,7 +45,6 @@ const privateProcedure = baseProcedure.use(({ context, next }) => {
 
   return next({ context: { ...context, user: context.user } })
 })
-
 
 // Create Event
 export const createEvent = privateProcedure

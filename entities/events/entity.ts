@@ -1,13 +1,14 @@
+import { CalendarEntity } from "@/entities/calendar"
 import { EventFullRo, EventRo, EventSimpleRo } from "@/schemas/event"
 
-/**
- * Event Entity - Pure data transformation for Event operations
- */
+import {
+  EventEntityFullSelect,
+  EventEntitySelect,
+  EventEntitySimpleSelect,
+} from "./query"
+
 export class EventEntity {
-  /**
-   * Convert database result to EventSimpleRo
-   */
-  static toSimpleRo(data: any): EventSimpleRo {
+  static toSimpleRo(data: EventEntitySimpleSelect): EventSimpleRo {
     return {
       id: data.id,
       emoji: data.emoji,
@@ -19,47 +20,24 @@ export class EventEntity {
       isAllDay: data.isAllDay,
       location: data.location || undefined,
       maxParticipants: data.maxParticipants || undefined,
-      links: data.links || [],
-      documents: data.documents || [],
-      aiConfidence: data.aiConfidence || undefined,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      userId: data.userId,
-      calendarId: data.calendarId,
+      links: data.links,
     }
   }
 
-  /**
-   * Convert database result to EventRo (with calendar info)
-   */
-  static toRo(data: any): EventRo {
+  static toRo(data: EventEntitySelect): EventRo {
     return {
       ...this.toSimpleRo(data),
       calendar: data.calendar
-        ? {
-            id: data.calendar.id,
-            name: data.calendar.name,
-            color: data.calendar.color,
-            emoji: data.calendar.emoji,
-          }
+        ? CalendarEntity.toSimpleRo(data.calendar)
         : undefined,
     }
   }
 
-  /**
-   * Convert database result to EventFullRo (with all relations)
-   */
-  static toFullRo(data: any): EventFullRo {
+  static toFullRo(data: EventEntityFullSelect): EventFullRo {
     return {
       ...this.toSimpleRo(data),
       calendar: data.calendar
-        ? {
-            id: data.calendar.id,
-            name: data.calendar.name,
-            color: data.calendar.color,
-            emoji: data.calendar.emoji,
-            userId: data.calendar.userId,
-          }
+        ? CalendarEntity.toSimpleRo(data.calendar)
         : undefined,
       recurrence: data.recurrence
         ? {
