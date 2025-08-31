@@ -1,13 +1,12 @@
+import {
+  UserEntityFullSelect,
+  UserEntitySelect,
+  UserEntitySimpleSelect,
+} from "@/entities/user"
 import { UserFullRo, UserRo, UserSimpleRo } from "@/schemas/user"
 
-/**
- * User Entity - Pure data transformation for User operations
- */
 export class UserEntity {
-  /**
-   * Convert database result to UserSimpleRo
-   */
-  static toSimpleRo(data: any): UserSimpleRo {
+  static toSimpleRo(data: UserEntitySimpleSelect): UserSimpleRo {
     return {
       id: data.id,
       email: data.email,
@@ -19,17 +18,11 @@ export class UserEntity {
     }
   }
 
-  /**
-   * Convert database result to UserRo
-   */
-  static toRo(data: any): UserRo {
+  static toRo(data: UserEntitySelect): UserRo {
     return this.toSimpleRo(data)
   }
 
-  /**
-   * Convert database result to UserFullRo
-   */
-  static toFullRo(data: any): UserFullRo {
+  static toFullRo(data: UserEntityFullSelect): UserFullRo {
     return this.toSimpleRo(data)
   }
 }

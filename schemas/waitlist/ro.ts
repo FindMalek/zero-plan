@@ -8,11 +8,7 @@ import { z } from "zod"
 export const waitlistEntrySimpleRo = z.object({
   id: z.string(),
   email: z.string(),
-  position: z.number(),
-  isNotified: z.boolean(),
-  invitedAt: z.date().optional(),
   createdAt: z.date(),
-  updatedAt: z.date(),
 })
 
 export type WaitlistEntrySimpleRo = z.infer<typeof waitlistEntrySimpleRo>

@@ -1,11 +1,18 @@
 import { Prisma } from "@/prisma/client"
 
+import { EventQuery } from "../events"
+import { UserQuery } from "../user"
+
 export type CalendarEntitySimpleSelect = Prisma.CalendarGetPayload<{
   select: ReturnType<typeof CalendarQuery.getSimpleSelect>
 }>
 
 export type CalendarEntitySelect = Prisma.CalendarGetPayload<{
   select: ReturnType<typeof CalendarQuery.getSelect>
+}>
+
+export type CalendarEntityFullSelect = Prisma.CalendarGetPayload<{
+  select: ReturnType<typeof CalendarQuery.getFullSelect>
 }>
 
 export class CalendarQuery {
@@ -30,20 +37,15 @@ export class CalendarQuery {
     } satisfies Prisma.CalendarSelect
   }
 
-  static getSimpleInclude() {
-    return {} satisfies Prisma.CalendarInclude
-  }
-
-  static getInclude() {
+  static getFullSelect() {
     return {
-      events: true,
-    } satisfies Prisma.CalendarInclude
-  }
-
-  static getFullInclude() {
-    return {
-      ...this.getInclude(),
-      user: true,
-    } satisfies Prisma.CalendarInclude
+      ...this.getSelect(),
+      user: {
+        select: UserQuery.getSimpleSelect(),
+      },
+      events: {
+        select: EventQuery.getSimpleSelect(),
+      },
+    } satisfies Prisma.CalendarSelect
   }
 }

@@ -1,4 +1,10 @@
-import { CalendarEntitySimpleSelect } from "@/entities/calendar"
+import {
+  CalendarEntityFullSelect,
+  CalendarEntitySelect,
+  CalendarEntitySimpleSelect,
+} from "@/entities/calendar"
+import { EventEntity } from "@/entities/events"
+import { UserEntity } from "@/entities/user"
 import {
   CalendarFullRo,
   CalendarRo,
@@ -16,11 +22,22 @@ export class CalendarEntity {
     }
   }
 
-  static toRo(data: any): CalendarRo {
-    return this.toSimpleRo(data)
+  static toRo(data: CalendarEntitySelect): CalendarRo {
+    return {
+      ...this.toSimpleRo(data),
+      isDefault: data.isDefault,
+      isActive: data.isActive,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      userId: data.userId,
+    }
   }
 
-  static toFullRo(data: any): CalendarFullRo {
-    return this.toSimpleRo(data)
+  static toFullRo(data: CalendarEntityFullSelect): CalendarFullRo {
+    return {
+      ...this.toRo(data),
+      user: data.user ? UserEntity.toSimpleRo(data.user) : undefined,
+      events: data.events ? data.events.map(EventEntity.toSimpleRo) : undefined,
+    }
   }
 }

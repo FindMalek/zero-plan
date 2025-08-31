@@ -1,11 +1,15 @@
 import { CalendarEntity } from "@/entities/calendar"
 import { EventFullRo, EventRo, EventSimpleRo } from "@/schemas/event"
 
+import { ConferenceEntity } from "./conference"
+import { ParticipantEntity } from "./participant"
 import {
   EventEntityFullSelect,
   EventEntitySelect,
   EventEntitySimpleSelect,
 } from "./query"
+import { RecurrenceEntity } from "./recurrence"
+import { ReminderEntity } from "./reminder"
 
 export class EventEntity {
   static toSimpleRo(data: EventEntitySimpleSelect): EventSimpleRo {
@@ -40,56 +44,17 @@ export class EventEntity {
         ? CalendarEntity.toSimpleRo(data.calendar)
         : undefined,
       recurrence: data.recurrence
-        ? {
-            id: data.recurrence.id,
-            pattern: data.recurrence.pattern,
-            endDate: data.recurrence.endDate || undefined,
-            customRule: data.recurrence.customRule as
-              | Record<string, string | number | boolean>
-              | undefined,
-            createdAt: data.recurrence.createdAt,
-            updatedAt: data.recurrence.updatedAt,
-            eventId: data.recurrence.eventId,
-          }
+        ? RecurrenceEntity.toSimpleRo(data.recurrence)
         : undefined,
-      reminders: data.reminders?.map((reminder: any) => ({
-        id: reminder.id,
-        value: reminder.value,
-        unit: reminder.unit,
-        createdAt: reminder.createdAt,
-        updatedAt: reminder.updatedAt,
-        eventId: reminder.eventId,
-      })),
+      reminders: data.reminders?.map((reminder) =>
+        ReminderEntity.toSimpleRo(reminder)
+      ),
       conference: data.conference
-        ? {
-            id: data.conference.id,
-            meetingRoom: data.conference.meetingRoom || undefined,
-            conferenceLink: data.conference.conferenceLink || undefined,
-            conferenceId: data.conference.conferenceId || undefined,
-            dialInNumber: data.conference.dialInNumber || undefined,
-            accessCode: data.conference.accessCode || undefined,
-            hostKey: data.conference.hostKey || undefined,
-            isRecorded: data.conference.isRecorded,
-            maxDuration: data.conference.maxDuration || undefined,
-            createdAt: data.conference.createdAt,
-            updatedAt: data.conference.updatedAt,
-            eventId: data.conference.eventId,
-          }
+        ? ConferenceEntity.toSimpleRo(data.conference)
         : undefined,
-      participants: data.participants?.map((participant: any) => ({
-        id: participant.id,
-        email: participant.email,
-        name: participant.name || undefined,
-        role: participant.role,
-        rsvpStatus: participant.rsvpStatus,
-        isOrganizer: participant.isOrganizer,
-        notes: participant.notes || undefined,
-        invitedAt: participant.invitedAt,
-        respondedAt: participant.respondedAt || undefined,
-        createdAt: participant.createdAt,
-        updatedAt: participant.updatedAt,
-        eventId: participant.eventId,
-      })),
+      participants: data.participants?.map((participant) =>
+        ParticipantEntity.toSimpleRo(participant)
+      ),
     }
   }
 }

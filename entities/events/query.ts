@@ -1,6 +1,11 @@
 import { CalendarQuery } from "@/entities/calendar"
 import { Prisma } from "@/prisma/client"
 
+import { ConferenceQuery } from "./conference"
+import { ParticipantQuery } from "./participant"
+import { RecurrenceQuery } from "./recurrence"
+import { ReminderQuery } from "./reminder"
+
 export type EventEntitySimpleSelect = Prisma.EventGetPayload<{
   select: ReturnType<typeof EventQuery.getSimpleSelect>
 }>
@@ -43,57 +48,16 @@ export class EventQuery {
     return {
       ...this.getSelect(),
       recurrence: {
-        select: {
-          id: true,
-          pattern: true,
-          endDate: true,
-          customRule: true,
-          createdAt: true,
-          updatedAt: true,
-          eventId: true,
-        },
+        select: RecurrenceQuery.getSimpleSelect(),
       },
       reminders: {
-        select: {
-          id: true,
-          value: true,
-          unit: true,
-          createdAt: true,
-          updatedAt: true,
-          eventId: true,
-        },
+        select: ReminderQuery.getSimpleSelect(),
       },
       conference: {
-        select: {
-          id: true,
-          meetingRoom: true,
-          conferenceLink: true,
-          conferenceId: true,
-          dialInNumber: true,
-          accessCode: true,
-          hostKey: true,
-          isRecorded: true,
-          maxDuration: true,
-          createdAt: true,
-          updatedAt: true,
-          eventId: true,
-        },
+        select: ConferenceQuery.getSimpleSelect(),
       },
       participants: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          rsvpStatus: true,
-          isOrganizer: true,
-          notes: true,
-          invitedAt: true,
-          respondedAt: true,
-          createdAt: true,
-          updatedAt: true,
-          eventId: true,
-        },
+        select: ParticipantQuery.getSimpleSelect(),
       },
     } satisfies Prisma.EventSelect
   }

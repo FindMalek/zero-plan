@@ -1,10 +1,9 @@
 import { z } from "zod"
 
-// =============================================================================
-// CALENDAR RESPONSE OBJECTS (Three-Tier System)
-// =============================================================================
+import { eventSimpleRo } from "../event"
+import { userSimpleRo } from "../user"
+import { paginationSchema } from "../utils"
 
-// Calendar Simple RO (Basic calendar - no relations)
 export const calendarSimpleRo = z.object({
   id: z.string(),
   name: z.string(),
@@ -15,39 +14,23 @@ export const calendarSimpleRo = z.object({
 
 export type CalendarSimpleRo = z.infer<typeof calendarSimpleRo>
 
-// Calendar RO (With some basic stats)
 export const calendarRo = calendarSimpleRo.extend({
-  eventCount: z.number().optional(),
-  upcomingEvents: z.number().optional(),
+  isDefault: z.boolean(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  userId: z.string(),
 })
 
 export type CalendarRo = z.infer<typeof calendarRo>
 
-// Calendar Full RO (With events)
-export const calendarFullRo = calendarSimpleRo.extend({
-  eventCount: z.number().optional(),
-  upcomingEvents: z.number().optional(),
-  events: z
-    .array(
-      z.object({
-        id: z.string(),
-        title: z.string(),
-        emoji: z.string(),
-        startTime: z.date(),
-        endTime: z.date().optional(),
-        isAllDay: z.boolean(),
-      })
-    )
-    .optional(),
+export const calendarFullRo = calendarRo.extend({
+  user: userSimpleRo.optional(),
+  events: z.array(eventSimpleRo).optional(),
 })
 
 export type CalendarFullRo = z.infer<typeof calendarFullRo>
 
-// =============================================================================
-// API RESPONSE WRAPPERS
-// =============================================================================
-
-// Create Calendar Response
 export const createCalendarRo = z.object({
   success: z.boolean(),
   calendar: calendarRo.optional(),
@@ -56,7 +39,6 @@ export const createCalendarRo = z.object({
 
 export type CreateCalendarRo = z.infer<typeof createCalendarRo>
 
-// Get Calendar Response
 export const getCalendarRo = z.object({
   success: z.boolean(),
   calendar: calendarFullRo.optional(),
@@ -65,7 +47,6 @@ export const getCalendarRo = z.object({
 
 export type GetCalendarRo = z.infer<typeof getCalendarRo>
 
-// Update Calendar Response
 export const updateCalendarRo = z.object({
   success: z.boolean(),
   calendar: calendarRo.optional(),
@@ -74,7 +55,6 @@ export const updateCalendarRo = z.object({
 
 export type UpdateCalendarRo = z.infer<typeof updateCalendarRo>
 
-// Delete Calendar Response
 export const deleteCalendarRo = z.object({
   success: z.boolean(),
   error: z.string().optional(),
@@ -82,18 +62,10 @@ export const deleteCalendarRo = z.object({
 
 export type DeleteCalendarRo = z.infer<typeof deleteCalendarRo>
 
-// List Calendars Response
 export const listCalendarsRo = z.object({
   success: z.boolean(),
   calendars: z.array(calendarRo).optional(),
-  pagination: z
-    .object({
-      page: z.number(),
-      limit: z.number(),
-      total: z.number(),
-      totalPages: z.number(),
-    })
-    .optional(),
+  pagination: paginationSchema.optional(),
   error: z.string().optional(),
 })
 

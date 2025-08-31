@@ -1,12 +1,18 @@
 import { Prisma } from "@/prisma/client"
 
-/**
- * Waitlist Query Selectors - Prisma select objects for WaitlistEntry operations
- */
+export type WaitlistEntitySimpleSelect = Prisma.WaitlistGetPayload<{
+  select: ReturnType<typeof WaitlistQuery.getSimpleSelect>
+}>
+
+export type WaitlistEntitySelect = Prisma.WaitlistGetPayload<{
+  select: ReturnType<typeof WaitlistQuery.getSelect>
+}>
+
+export type WaitlistEntityFullSelect = Prisma.WaitlistGetPayload<{
+  select: ReturnType<typeof WaitlistQuery.getFullSelect>
+}>
+
 export class WaitlistQuery {
-  /**
-   * Simple select - basic waitlist entry fields
-   */
   static getSimpleSelect() {
     return {
       id: true,
@@ -15,30 +21,11 @@ export class WaitlistQuery {
     } satisfies Prisma.WaitlistSelect
   }
 
-  /**
-   * Standard select - same as simple for waitlist entry
-   */
-  static getStandardSelect() {
+  static getSelect() {
     return this.getSimpleSelect()
   }
 
-  /**
-   * Full select - same as simple for waitlist entry
-   */
   static getFullSelect() {
     return this.getSimpleSelect()
   }
 }
-
-// Type definitions for the select results
-export type WaitlistEntitySimpleSelect = Prisma.WaitlistGetPayload<{
-  select: ReturnType<typeof WaitlistQuery.getSimpleSelect>
-}>
-
-export type WaitlistEntityStandardSelect = Prisma.WaitlistGetPayload<{
-  select: ReturnType<typeof WaitlistQuery.getStandardSelect>
-}>
-
-export type WaitlistEntityFullSelect = Prisma.WaitlistGetPayload<{
-  select: ReturnType<typeof WaitlistQuery.getFullSelect>
-}>
