@@ -23,13 +23,23 @@ export function MainInputSection({
   onSend,
   isPending,
 }: MainInputSectionProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      if (!isPending && eventDetails.trim()) {
+        onSend()
+      }
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="relative">
         <Textarea
           value={eventDetails}
           onChange={(e) => setEventDetails(e.target.value)}
-          placeholder="Type or paste your event details here... (e.g., 'Coffee meeting with John tomorrow at 3pm')"
+          onKeyDown={handleKeyDown}
+          placeholder="Type or paste your event details here... (e.g., 'Coffee meeting with John tomorrow at 3pm') - Press Enter to submit"
           disabled={isPending}
           className="min-h-[120px] resize-none rounded-xl border-slate-200 bg-white pr-12 text-base text-slate-900 shadow-sm transition-all duration-200 focus:border-blue-400 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
         />

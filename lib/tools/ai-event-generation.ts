@@ -352,7 +352,6 @@ export const generateEventDescriptionTool = tool({
 
       work: (title: string, _ctx?: string, _time?: string, dur?: number) =>
         `
-        <br><br><div dir="auto"><br><br><p><strong>${title}</strong></p>
         <p>The purpose of this session is to focus on key objectives and tasks. 
         It serves as a productive time block to make progress on important work 
         and ensure alignment with project goals.</p>
@@ -361,7 +360,6 @@ export const generateEventDescriptionTool = tool({
 
       meeting: (title: string, ctx?: string) =>
         `
-        <p><strong>${title}</strong></p>
         <p>Meeting agenda and objectives:</p>
         <ul>
           <li>Review progress and updates</li>
@@ -409,7 +407,6 @@ export const generateEventDescriptionTool = tool({
 
       appointment: (title: string, ctx?: string) =>
         `
-        <p><strong>${title}</strong></p>
         <p>Appointment checklist:</p>
         <ul>
           <li>Confirm appointment time</li>
@@ -421,8 +418,7 @@ export const generateEventDescriptionTool = tool({
 
       birthday: (title: string, ctx?: string) =>
         `
-        <p><strong>🎉 ${title} 🎉</strong></p>
-        <p>Party preparations:</p>
+        <p>🎉 Party preparations:</p>
         <ul>
           <li>Bring/prepare gift</li>
           <li>Confirm attendance</li>

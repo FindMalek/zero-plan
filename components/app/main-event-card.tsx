@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
 import { EventSimpleRo } from "@/schemas"
+
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 
 import { Icons } from "@/components/shared/icons"
 import { Button } from "@/components/ui/button"
@@ -14,45 +15,39 @@ import {
 
 interface MainEventCardProps {
   event: EventSimpleRo
+  isLoading?: boolean
 }
 
-export function MainEventCard({ event }: MainEventCardProps) {
-  const [copied, setCopied] = useState(false)
-
-  const formatEventForCopy = () => {
-    const date = event.startTime.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-    const startTime = event.startTime.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    })
-    const endTime = event.endTime
-      ? event.endTime.toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : null
-
-    let copyText = `${event.title} on ${date} at ${startTime}${endTime ? ` - ${endTime}` : ""}`
-
-    if (event.description) {
-      copyText += `\n\n${event.description}`
-    }
-
-    return copyText
-  }
+export function MainEventCard({
+  event,
+  isLoading = false,
+}: MainEventCardProps) {
+  const { isCopied, copy } = useCopyToClipboard()
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(formatEventForCopy())
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await copy(event.title)
     } catch (error) {
-      console.error("Failed to copy:", error)
+      console.error("Copy failed:", error)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="animate-pulse">
+          <div className="mb-3 flex items-start justify-between">
+            <div className="h-6 w-3/4 rounded bg-slate-200 dark:bg-slate-700"></div>
+            <div className="h-6 w-16 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-700"></div>
+            <div className="h-4 w-full rounded bg-slate-200 dark:bg-slate-700"></div>
+            <div className="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-700"></div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -85,7 +80,7 @@ export function MainEventCard({ event }: MainEventCardProps) {
                   onClick={handleCopy}
                   className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                 >
-                  {copied ? (
+                  {isCopied ? (
                     <Icons.check className="h-4 w-4" />
                   ) : (
                     <Icons.copy className="h-4 w-4" />
@@ -93,7 +88,7 @@ export function MainEventCard({ event }: MainEventCardProps) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {copied ? "Copied!" : "Copy event details"}
+                {isCopied ? "Copied event title!" : "Copy event title"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -111,7 +106,24 @@ export function MainEventCard({ event }: MainEventCardProps) {
           {event.description && (
             <div
               className="text-sm text-slate-700 dark:text-slate-300"
-              dangerouslySetInnerHTML={{ __html: event.description }}
+              dangerouslySetInnerHTML={{
+                __html: event.description
+                  .replace(
+                    new RegExp(
+                      `<p><strong>${event.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</strong></p>`,
+                      "gi"
+                    ),
+                    ""
+                  )
+                  .replace(
+                    new RegExp(
+                      event.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                      "gi"
+                    ),
+                    ""
+                  )
+                  .trim(),
+              }}
             />
           )}
         </div>

@@ -47,7 +47,11 @@ export default function MainPage() {
           isPending={processEvents.isPending}
         />
 
-        <MainEventsSection events={events} />
+        <MainEventsSection
+          events={events}
+          isLoading={processEvents.isPending}
+          showLoadingCards={3}
+        />
       </div>
     </div>
   )

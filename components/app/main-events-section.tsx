@@ -4,10 +4,18 @@ import { MainEventCard } from "./main-event-card"
 
 interface MainEventsSectionProps {
   events: EventSimpleRo[]
+  isLoading?: boolean
+  showLoadingCards?: number
 }
 
-export function MainEventsSection({ events }: MainEventsSectionProps) {
-  if (events.length === 0) {
+export function MainEventsSection({
+  events,
+  isLoading = false,
+  showLoadingCards = 2,
+}: MainEventsSectionProps) {
+  const shouldShowSection = events.length > 0 || isLoading
+
+  if (!shouldShowSection) {
     return null
   }
 
@@ -20,6 +28,14 @@ export function MainEventsSection({ events }: MainEventsSectionProps) {
         {events.map((event) => (
           <MainEventCard key={event.id} event={event} />
         ))}
+        {isLoading &&
+          Array.from({ length: showLoadingCards }, (_, index) => (
+            <MainEventCard
+              key={`loading-${index}`}
+              event={{} as EventSimpleRo}
+              isLoading={true}
+            />
+          ))}
       </div>
     </div>
   )
