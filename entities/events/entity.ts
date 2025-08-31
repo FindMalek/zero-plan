@@ -25,6 +25,7 @@ export class EventEntity {
       location: data.location || undefined,
       maxParticipants: data.maxParticipants || undefined,
       links: data.links,
+      aiConfidence: data.aiConfidence || undefined,
     }
   }
 

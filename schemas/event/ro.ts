@@ -26,6 +26,7 @@ export const eventSimpleRo = z.object({
   location: z.string().optional(),
   maxParticipants: z.number().optional(),
   links: z.array(z.string()).optional(),
+  aiConfidence: z.number().optional(),
 })
 
 export type EventSimpleRo = z.infer<typeof eventSimpleRo>

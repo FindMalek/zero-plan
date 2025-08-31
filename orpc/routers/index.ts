@@ -1,9 +1,9 @@
+import { aiRouter } from "./ai"
 import { eventRouter } from "./event"
-import { userRouter } from "./user"
 
 export const appRouter = {
-  users: userRouter,
   events: eventRouter,
+  ai: aiRouter,
 }
 
 export type AppRouter = typeof appRouter

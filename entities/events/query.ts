@@ -32,6 +32,7 @@ export class EventQuery {
       location: true,
       maxParticipants: true,
       links: true,
+      aiConfidence: true,
     } satisfies Prisma.EventSelect
   }
 

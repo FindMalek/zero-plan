@@ -1,3 +1,4 @@
+import { EventEntity, EventQuery } from "@/entities/events"
 import { database } from "@/prisma/client"
 import {
   createEventDto,
@@ -27,7 +28,6 @@ import {
   processEventsRo,
   ProcessEventsRo,
 } from "@/schemas/processing"
-import { createOpenAI } from "@ai-sdk/openai"
 import { ORPCError, os } from "@orpc/server"
 import { generateText } from "ai"
 import { z } from "zod"
@@ -86,16 +86,7 @@ export const createEvent = privateProcedure
           userId: context.user.id,
           calendarId: input.calendarId,
         },
-        include: {
-          calendar: {
-            select: {
-              id: true,
-              name: true,
-              color: true,
-              emoji: true,
-            },
-          },
-        },
+        select: EventQuery.getSelect(),
       })
 
       // Create conference details if provided
@@ -163,25 +154,7 @@ export const createEvent = privateProcedure
 
       return {
         success: true,
-        event: {
-          id: event.id,
-          emoji: event.emoji,
-          title: event.title,
-          description: event.description || undefined,
-          startTime: event.startTime,
-          endTime: event.endTime || undefined,
-          timezone: event.timezone,
-          isAllDay: event.isAllDay,
-          location: event.location || undefined,
-          maxParticipants: event.maxParticipants || undefined,
-          links: event.links,
-          aiConfidence: event.aiConfidence || undefined,
-          createdAt: event.createdAt,
-          updatedAt: event.updatedAt,
-          userId: event.userId,
-          calendarId: event.calendarId,
-          calendar: event.calendar,
-        },
+        event: EventEntity.toRo(event),
       }
     } catch (error: any) {
       if (error instanceof ORPCError) {
@@ -207,21 +180,7 @@ export const getEvent = privateProcedure
           id: input.id,
           userId: context.user.id,
         },
-        include: {
-          calendar: {
-            select: {
-              id: true,
-              name: true,
-              color: true,
-              emoji: true,
-              userId: true,
-            },
-          },
-          recurrence: true,
-          reminders: true,
-          conference: true,
-          participants: true,
-        },
+        select: EventQuery.getFullSelect(),
       })
 
       if (!event) {
@@ -233,76 +192,7 @@ export const getEvent = privateProcedure
 
       return {
         success: true,
-        event: {
-          id: event.id,
-          emoji: event.emoji,
-          title: event.title,
-          description: event.description || undefined,
-          startTime: event.startTime,
-          endTime: event.endTime || undefined,
-          timezone: event.timezone,
-          isAllDay: event.isAllDay,
-          location: event.location || undefined,
-          maxParticipants: event.maxParticipants || undefined,
-          links: event.links,
-          aiConfidence: event.aiConfidence || undefined,
-          createdAt: event.createdAt,
-          updatedAt: event.updatedAt,
-          userId: event.userId,
-          calendarId: event.calendarId,
-          calendar: event.calendar,
-          recurrence: event.recurrence
-            ? {
-                id: event.recurrence.id,
-                pattern: event.recurrence.pattern,
-                endDate: event.recurrence.endDate || undefined,
-                customRule: event.recurrence.customRule as
-                  | Record<string, string | number | boolean>
-                  | undefined,
-                createdAt: event.recurrence.createdAt,
-                updatedAt: event.recurrence.updatedAt,
-                eventId: event.recurrence.eventId,
-              }
-            : undefined,
-          reminders: event.reminders.map((reminder) => ({
-            id: reminder.id,
-            value: reminder.value,
-            unit: reminder.unit,
-            createdAt: reminder.createdAt,
-            updatedAt: reminder.updatedAt,
-            eventId: reminder.eventId,
-          })),
-          conference: event.conference
-            ? {
-                id: event.conference.id,
-                meetingRoom: event.conference.meetingRoom || undefined,
-                conferenceLink: event.conference.conferenceLink || undefined,
-                conferenceId: event.conference.conferenceId || undefined,
-                dialInNumber: event.conference.dialInNumber || undefined,
-                accessCode: event.conference.accessCode || undefined,
-                hostKey: event.conference.hostKey || undefined,
-                isRecorded: event.conference.isRecorded,
-                maxDuration: event.conference.maxDuration || undefined,
-                createdAt: event.conference.createdAt,
-                updatedAt: event.conference.updatedAt,
-                eventId: event.conference.eventId,
-              }
-            : undefined,
-          participants: event.participants.map((participant) => ({
-            id: participant.id,
-            email: participant.email,
-            name: participant.name || undefined,
-            role: participant.role,
-            rsvpStatus: participant.rsvpStatus,
-            isOrganizer: participant.isOrganizer,
-            notes: participant.notes || undefined,
-            invitedAt: participant.invitedAt,
-            respondedAt: participant.respondedAt || undefined,
-            createdAt: participant.createdAt,
-            updatedAt: participant.updatedAt,
-            eventId: participant.eventId,
-          })),
-        },
+        event: EventEntity.toFullRo(event),
       }
     } catch (error: any) {
       if (error instanceof ORPCError) {
@@ -376,16 +266,7 @@ export const updateEvent = privateProcedure
       const event = await database.event.update({
         where: { id: input.id },
         data: updateData,
-        include: {
-          calendar: {
-            select: {
-              id: true,
-              name: true,
-              color: true,
-              emoji: true,
-            },
-          },
-        },
+        select: EventQuery.getSelect(),
       })
 
       // Update conference if provided
@@ -441,25 +322,7 @@ export const updateEvent = privateProcedure
 
       return {
         success: true,
-        event: {
-          id: event.id,
-          emoji: event.emoji,
-          title: event.title,
-          description: event.description || undefined,
-          startTime: event.startTime,
-          endTime: event.endTime || undefined,
-          timezone: event.timezone,
-          isAllDay: event.isAllDay,
-          location: event.location || undefined,
-          maxParticipants: event.maxParticipants || undefined,
-          links: event.links,
-          aiConfidence: event.aiConfidence || undefined,
-          createdAt: event.createdAt,
-          updatedAt: event.updatedAt,
-          userId: event.userId,
-          calendarId: event.calendarId,
-          calendar: event.calendar,
-        },
+        event: EventEntity.toRo(event),
       }
     } catch (error: any) {
       if (error instanceof ORPCError) {
@@ -857,7 +720,6 @@ RESPOND WITH VALID JSON ONLY in this exact format:
     }
   })
 
-// Export the event router
 export const eventRouter = {
   createEvent,
   getEvent,
