@@ -3,10 +3,10 @@ import { SiteConfig } from "@/types"
 export const siteConfig: SiteConfig = {
   name: "Zero Planner",
   description: "Simple event planning made effortless.",
-  url: "https://www.zeroplanner.com",
+  url: "https://zero-plan.findmalek.com",
   images: {
-    default: "https://www.zeroplanner.com/og.png",
-    notFound: "https://www.zeroplanner.com/not-found.png",
+    default: "https://zero-plan.findmalek.com/og.png",
+    notFound: "https://zero-plan.findmalek.com/not-found.png",
     logo: "https://emojicdn.elk.sh/📅?style=twitter",
   },
   links: {

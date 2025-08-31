@@ -1,22 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the `_CardToTag` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `_CredentialToTag` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `card` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `card_metadata` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `container` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `credential` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `credential_history` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `credential_metadata` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `encrypted_data` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `health` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `platform` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `secret` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `secret_metadata` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `tag` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "RepeatPattern" AS ENUM ('NONE', 'DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'YEARLY', 'CUSTOM');
 
@@ -27,148 +8,84 @@ CREATE TYPE "Timezone" AS ENUM ('UTC', 'AMERICA_NEW_YORK', 'AMERICA_CHICAGO', 'A
 CREATE TYPE "ReminderUnit" AS ENUM ('MINUTES', 'HOURS', 'DAYS', 'WEEKS');
 
 -- CreateEnum
+CREATE TYPE "RsvpStatus" AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED', 'MAYBE', 'NO_RESPONSE');
+
+-- CreateEnum
+CREATE TYPE "ParticipantRole" AS ENUM ('ORGANIZER', 'ATTENDEE', 'OPTIONAL_ATTENDEE', 'PRESENTER', 'MODERATOR');
+
+-- CreateEnum
 CREATE TYPE "ProcessingStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'RETRY');
 
--- DropForeignKey
-ALTER TABLE "_CardToTag" DROP CONSTRAINT "_CardToTag_A_fkey";
+-- CreateTable
+CREATE TABLE "user" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "emailVerified" BOOLEAN NOT NULL,
+    "image" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "_CardToTag" DROP CONSTRAINT "_CardToTag_B_fkey";
+    CONSTRAINT "user_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "_CredentialToTag" DROP CONSTRAINT "_CredentialToTag_A_fkey";
+-- CreateTable
+CREATE TABLE "session" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "_CredentialToTag" DROP CONSTRAINT "_CredentialToTag_B_fkey";
+    CONSTRAINT "session_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "card" DROP CONSTRAINT "card_containerId_fkey";
+-- CreateTable
+CREATE TABLE "account" (
+    "id" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "providerId" TEXT NOT NULL,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "idToken" TEXT,
+    "scope" TEXT,
+    "password" TEXT,
+    "accessTokenExpiresAt" TIMESTAMP(3),
+    "refreshTokenExpiresAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "card" DROP CONSTRAINT "card_cvvEncryptionId_fkey";
+    CONSTRAINT "account_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "card" DROP CONSTRAINT "card_numberEncryptionId_fkey";
+-- CreateTable
+CREATE TABLE "verification" (
+    "id" TEXT NOT NULL,
+    "identifier" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3),
+    "updatedAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3) NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "card" DROP CONSTRAINT "card_userId_fkey";
+    CONSTRAINT "verification_pkey" PRIMARY KEY ("id")
+);
 
--- DropForeignKey
-ALTER TABLE "card_metadata" DROP CONSTRAINT "card_metadata_cardId_fkey";
+-- CreateTable
+CREATE TABLE "waitlist" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "country" TEXT,
+    "city" TEXT,
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- DropForeignKey
-ALTER TABLE "container" DROP CONSTRAINT "container_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential" DROP CONSTRAINT "credential_containerId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential" DROP CONSTRAINT "credential_passwordEncryptionId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential" DROP CONSTRAINT "credential_platformId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential" DROP CONSTRAINT "credential_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential_history" DROP CONSTRAINT "credential_history_credentialId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential_history" DROP CONSTRAINT "credential_history_passwordEncryptionId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential_history" DROP CONSTRAINT "credential_history_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "credential_metadata" DROP CONSTRAINT "credential_metadata_credentialId_fkey";
-
--- DropForeignKey
-ALTER TABLE "platform" DROP CONSTRAINT "platform_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "secret" DROP CONSTRAINT "secret_containerId_fkey";
-
--- DropForeignKey
-ALTER TABLE "secret" DROP CONSTRAINT "secret_userId_fkey";
-
--- DropForeignKey
-ALTER TABLE "secret" DROP CONSTRAINT "secret_valueEncryptionId_fkey";
-
--- DropForeignKey
-ALTER TABLE "secret_metadata" DROP CONSTRAINT "secret_metadata_secretId_fkey";
-
--- DropForeignKey
-ALTER TABLE "tag" DROP CONSTRAINT "tag_containerId_fkey";
-
--- DropForeignKey
-ALTER TABLE "tag" DROP CONSTRAINT "tag_userId_fkey";
-
--- DropTable
-DROP TABLE "_CardToTag";
-
--- DropTable
-DROP TABLE "_CredentialToTag";
-
--- DropTable
-DROP TABLE "card";
-
--- DropTable
-DROP TABLE "card_metadata";
-
--- DropTable
-DROP TABLE "container";
-
--- DropTable
-DROP TABLE "credential";
-
--- DropTable
-DROP TABLE "credential_history";
-
--- DropTable
-DROP TABLE "credential_metadata";
-
--- DropTable
-DROP TABLE "encrypted_data";
-
--- DropTable
-DROP TABLE "health";
-
--- DropTable
-DROP TABLE "platform";
-
--- DropTable
-DROP TABLE "secret";
-
--- DropTable
-DROP TABLE "secret_metadata";
-
--- DropTable
-DROP TABLE "tag";
-
--- DropEnum
-DROP TYPE "AccountStatus";
-
--- DropEnum
-DROP TYPE "CardProvider";
-
--- DropEnum
-DROP TYPE "CardStatus";
-
--- DropEnum
-DROP TYPE "CardType";
-
--- DropEnum
-DROP TYPE "ContainerType";
-
--- DropEnum
-DROP TYPE "PlatformStatus";
-
--- DropEnum
-DROP TYPE "SecretStatus";
-
--- DropEnum
-DROP TYPE "SecretType";
+    CONSTRAINT "waitlist_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "calendar" (
@@ -194,16 +111,11 @@ CREATE TABLE "event" (
     "description" TEXT,
     "startTime" TIMESTAMP(3) NOT NULL,
     "endTime" TIMESTAMP(3),
-    "timezone" "Timezone" NOT NULL DEFAULT 'UTC',
     "isAllDay" BOOLEAN NOT NULL DEFAULT false,
+    "timezone" "Timezone" NOT NULL DEFAULT 'UTC',
     "location" TEXT,
-    "meetingRoom" TEXT,
-    "conferenceLink" TEXT,
-    "conferenceId" TEXT,
-    "participantEmails" TEXT[],
     "maxParticipants" INTEGER,
     "links" TEXT[],
-    "documents" TEXT[],
     "aiConfidence" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -239,6 +151,42 @@ CREATE TABLE "event_reminder" (
 );
 
 -- CreateTable
+CREATE TABLE "event_conference" (
+    "id" TEXT NOT NULL,
+    "meetingRoom" TEXT,
+    "conferenceLink" TEXT,
+    "conferenceId" TEXT,
+    "dialInNumber" TEXT,
+    "accessCode" TEXT,
+    "hostKey" TEXT,
+    "isRecorded" BOOLEAN NOT NULL DEFAULT false,
+    "maxDuration" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "eventId" TEXT NOT NULL,
+
+    CONSTRAINT "event_conference_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "event_participant" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT,
+    "role" "ParticipantRole" NOT NULL DEFAULT 'ATTENDEE',
+    "rsvpStatus" "RsvpStatus" NOT NULL DEFAULT 'PENDING',
+    "isOrganizer" BOOLEAN NOT NULL DEFAULT false,
+    "notes" TEXT,
+    "invitedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "respondedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "eventId" TEXT NOT NULL,
+
+    CONSTRAINT "event_participant_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "input_processing_session" (
     "id" TEXT NOT NULL,
     "userInput" TEXT NOT NULL,
@@ -257,6 +205,18 @@ CREATE TABLE "input_processing_session" (
 
     CONSTRAINT "input_processing_session_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "session_token_key" ON "session"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "waitlist_email_key" ON "waitlist"("email");
+
+-- CreateIndex
+CREATE INDEX "waitlist_email_idx" ON "waitlist"("email");
 
 -- CreateIndex
 CREATE INDEX "calendar_userId_idx" ON "calendar"("userId");
@@ -286,6 +246,21 @@ CREATE INDEX "event_recurrence_pattern_idx" ON "event_recurrence"("pattern");
 CREATE INDEX "event_reminder_eventId_idx" ON "event_reminder"("eventId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "event_conference_eventId_key" ON "event_conference"("eventId");
+
+-- CreateIndex
+CREATE INDEX "event_participant_eventId_idx" ON "event_participant"("eventId");
+
+-- CreateIndex
+CREATE INDEX "event_participant_email_idx" ON "event_participant"("email");
+
+-- CreateIndex
+CREATE INDEX "event_participant_rsvpStatus_idx" ON "event_participant"("rsvpStatus");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "event_participant_eventId_email_key" ON "event_participant"("eventId", "email");
+
+-- CreateIndex
 CREATE INDEX "input_processing_session_userId_idx" ON "input_processing_session"("userId");
 
 -- CreateIndex
@@ -296,6 +271,12 @@ CREATE INDEX "input_processing_session_status_idx" ON "input_processing_session"
 
 -- CreateIndex
 CREATE INDEX "input_processing_session_createdAt_idx" ON "input_processing_session"("createdAt");
+
+-- AddForeignKey
+ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "calendar" ADD CONSTRAINT "calendar_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -311,6 +292,12 @@ ALTER TABLE "event_recurrence" ADD CONSTRAINT "event_recurrence_eventId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "event_reminder" ADD CONSTRAINT "event_reminder_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "event_conference" ADD CONSTRAINT "event_conference_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "event_participant" ADD CONSTRAINT "event_participant_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "input_processing_session" ADD CONSTRAINT "input_processing_session_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE SET NULL ON UPDATE CASCADE;
