@@ -43,7 +43,7 @@ export default function MainPage() {
       })
 
       if (result.success && result.events) {
-        const newEvents: EventSkeleton[] = result.events.map((event: any) => ({
+        const newEvents: EventSkeleton[] = result.events.map((event) => ({
           id: event.id,
           title: event.title,
           startTime: new Date(event.startTime),

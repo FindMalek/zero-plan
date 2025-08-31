@@ -167,23 +167,3 @@ export const listEventsRo = z.object({
 })
 
 export type ListEventsRo = z.infer<typeof listEventsRo>
-
-// Process Events Response
-export const processEventsRo = z.object({
-  success: z.boolean(),
-  events: z.array(eventRo).optional(),
-  processingSession: z
-    .object({
-      id: z.string(),
-      model: z.string(),
-      provider: z.string(),
-      processingTimeMs: z.number().optional(),
-      tokensUsed: z.number().optional(),
-      confidence: z.number().optional(),
-    })
-    .optional(),
-  totalEvents: z.number().optional(),
-  error: z.string().optional(),
-})
-
-export type ProcessEventsRo = z.infer<typeof processEventsRo>

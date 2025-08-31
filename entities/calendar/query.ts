@@ -1,6 +1,5 @@
 import { Prisma } from "@/prisma/client"
 
-import { EventQuery } from "../events"
 import { UserQuery } from "../user"
 
 export type CalendarEntitySimpleSelect = Prisma.CalendarGetPayload<{
@@ -42,9 +41,6 @@ export class CalendarQuery {
       ...this.getSelect(),
       user: {
         select: UserQuery.getSimpleSelect(),
-      },
-      events: {
-        select: EventQuery.getSimpleSelect(),
       },
     } satisfies Prisma.CalendarSelect
   }

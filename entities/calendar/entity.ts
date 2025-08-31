@@ -3,7 +3,6 @@ import {
   CalendarEntitySelect,
   CalendarEntitySimpleSelect,
 } from "@/entities/calendar"
-import { EventEntity } from "@/entities/events"
 import { UserEntity } from "@/entities/user"
 import {
   CalendarFullRo,
@@ -37,7 +36,6 @@ export class CalendarEntity {
     return {
       ...this.toRo(data),
       user: data.user ? UserEntity.toSimpleRo(data.user) : undefined,
-      events: data.events ? data.events.map(EventEntity.toSimpleRo) : undefined,
     }
   }
 }

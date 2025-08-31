@@ -1,6 +1,5 @@
 import { z } from "zod"
 
-import { eventSimpleRo } from "../event"
 import { userSimpleRo } from "../user"
 import { paginationSchema } from "../utils"
 
@@ -26,7 +25,6 @@ export type CalendarRo = z.infer<typeof calendarRo>
 
 export const calendarFullRo = calendarRo.extend({
   user: userSimpleRo.optional(),
-  events: z.array(eventSimpleRo).optional(),
 })
 
 export type CalendarFullRo = z.infer<typeof calendarFullRo>

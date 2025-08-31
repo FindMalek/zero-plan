@@ -1,13 +1,8 @@
-import { database } from "@/database/client"
+import { database } from "@/prisma/client"
 
 export const GET = async () => {
-  const newPage = await database.health.create({})
-
-  await database.health.delete({
-    where: {
-      id: newPage.id,
-    },
-  })
+  // Simple health check - just query the database
+  await database.$queryRaw`SELECT 1 as health_check`
 
   return new Response("OK", { status: 200 })
 }
