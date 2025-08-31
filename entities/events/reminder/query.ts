@@ -4,14 +4,6 @@ export type ReminderEntitySimpleSelect = Prisma.EventReminderGetPayload<{
   select: ReturnType<typeof ReminderQuery.getSimpleSelect>
 }>
 
-export type ReminderEntitySelect = Prisma.EventReminderGetPayload<{
-  select: ReturnType<typeof ReminderQuery.getSelect>
-}>
-
-export type ReminderEntityFullSelect = Prisma.EventReminderGetPayload<{
-  select: ReturnType<typeof ReminderQuery.getFullSelect>
-}>
-
 export class ReminderQuery {
   static getSimpleSelect() {
     return {
@@ -22,13 +14,5 @@ export class ReminderQuery {
       updatedAt: true,
       eventId: true,
     } satisfies Prisma.EventReminderSelect
-  }
-
-  static getSelect() {
-    return this.getSimpleSelect()
-  }
-
-  static getFullSelect() {
-    return this.getSimpleSelect()
   }
 }

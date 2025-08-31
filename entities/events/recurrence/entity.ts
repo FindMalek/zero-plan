@@ -1,8 +1,4 @@
-import {
-  RecurrenceEntityFullSelect,
-  RecurrenceEntitySelect,
-  RecurrenceEntitySimpleSelect,
-} from "@/entities/events/recurrence"
+import { RecurrenceEntitySimpleSelect } from "@/entities/events/recurrence"
 import { EventRecurrenceRo } from "@/schemas/event"
 
 export class RecurrenceEntity {
@@ -18,13 +14,5 @@ export class RecurrenceEntity {
       updatedAt: data.updatedAt,
       eventId: data.eventId,
     }
-  }
-
-  static toRo(data: RecurrenceEntitySelect): EventRecurrenceRo {
-    return this.toSimpleRo(data)
-  }
-
-  static toFullRo(data: RecurrenceEntityFullSelect): EventRecurrenceRo {
-    return this.toSimpleRo(data)
   }
 }

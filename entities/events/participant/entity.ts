@@ -1,8 +1,4 @@
-import {
-  ParticipantEntityFullSelect,
-  ParticipantEntitySelect,
-  ParticipantEntitySimpleSelect,
-} from "@/entities/events/participant"
+import { ParticipantEntitySimpleSelect } from "@/entities/events/participant"
 import { EventParticipantRo } from "@/schemas/event"
 
 export class ParticipantEntity {
@@ -21,13 +17,5 @@ export class ParticipantEntity {
       updatedAt: data.updatedAt,
       eventId: data.eventId,
     }
-  }
-
-  static toRo(data: ParticipantEntitySelect): EventParticipantRo {
-    return this.toSimpleRo(data)
-  }
-
-  static toFullRo(data: ParticipantEntityFullSelect): EventParticipantRo {
-    return this.toSimpleRo(data)
   }
 }

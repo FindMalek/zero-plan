@@ -4,14 +4,6 @@ export type ParticipantEntitySimpleSelect = Prisma.EventParticipantGetPayload<{
   select: ReturnType<typeof ParticipantQuery.getSimpleSelect>
 }>
 
-export type ParticipantEntitySelect = Prisma.EventParticipantGetPayload<{
-  select: ReturnType<typeof ParticipantQuery.getSelect>
-}>
-
-export type ParticipantEntityFullSelect = Prisma.EventParticipantGetPayload<{
-  select: ReturnType<typeof ParticipantQuery.getFullSelect>
-}>
-
 export class ParticipantQuery {
   static getSimpleSelect() {
     return {
@@ -28,13 +20,5 @@ export class ParticipantQuery {
       updatedAt: true,
       eventId: true,
     } satisfies Prisma.EventParticipantSelect
-  }
-
-  static getSelect() {
-    return this.getSimpleSelect()
-  }
-
-  static getFullSelect() {
-    return this.getSimpleSelect()
   }
 }

@@ -4,14 +4,6 @@ export type RecurrenceEntitySimpleSelect = Prisma.EventRecurrenceGetPayload<{
   select: ReturnType<typeof RecurrenceQuery.getSimpleSelect>
 }>
 
-export type RecurrenceEntitySelect = Prisma.EventRecurrenceGetPayload<{
-  select: ReturnType<typeof RecurrenceQuery.getSelect>
-}>
-
-export type RecurrenceEntityFullSelect = Prisma.EventRecurrenceGetPayload<{
-  select: ReturnType<typeof RecurrenceQuery.getFullSelect>
-}>
-
 export class RecurrenceQuery {
   static getSimpleSelect() {
     return {
@@ -23,13 +15,5 @@ export class RecurrenceQuery {
       updatedAt: true,
       eventId: true,
     } satisfies Prisma.EventRecurrenceSelect
-  }
-
-  static getSelect() {
-    return this.getSimpleSelect()
-  }
-
-  static getFullSelect() {
-    return this.getSimpleSelect()
   }
 }

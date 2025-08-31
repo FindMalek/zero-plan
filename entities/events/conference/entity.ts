@@ -1,8 +1,4 @@
-import {
-  ConferenceEntityFullSelect,
-  ConferenceEntitySelect,
-  ConferenceEntitySimpleSelect,
-} from "@/entities/events/conference"
+import { ConferenceEntitySimpleSelect } from "@/entities/events/conference"
 import { EventConferenceRo } from "@/schemas/event"
 
 export class ConferenceEntity {
@@ -21,13 +17,5 @@ export class ConferenceEntity {
       updatedAt: data.updatedAt,
       eventId: data.eventId,
     }
-  }
-
-  static toRo(data: ConferenceEntitySelect): EventConferenceRo {
-    return this.toSimpleRo(data)
-  }
-
-  static toFullRo(data: ConferenceEntityFullSelect): EventConferenceRo {
-    return this.toSimpleRo(data)
   }
 }
