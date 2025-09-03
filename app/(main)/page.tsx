@@ -12,6 +12,7 @@ import { MainInputSection } from "@/components/app/main-input-section"
 export default function MainPage() {
   const processEvents = useGenerateEvents()
   const [events, setEvents] = useState<EventSimpleRo[]>([])
+  const [processingSessionId, setProcessingSessionId] = useState<string | undefined>()
   const [eventDetails, setEventDetails] = useState(
     "i have an appointement tmrw at the doctor, and i have to go to Gafsa from ksar Hellal this weekend and on sunday i have a birthday part of my friend ayoub at 8 pm"
   )
@@ -24,13 +25,24 @@ export default function MainPage() {
         userInput: eventDetails.trim(),
       })
 
-      if (result.success && result.events?.length) {
-        setEvents((prev) => [...prev, ...(result.events || [])])
+      if (result.success) {
+        const sessionId = result.processingSession?.id
+        if (process.env.NODE_ENV === 'development') {
+          console.log("✅ Generation successful, session ID:", sessionId)
+        }
+        setProcessingSessionId(sessionId)
+        setEvents(result.events || [])
         setEventDetails("")
+      } else {
+        console.error("Failed to process events:", result.error)
       }
     } catch (error) {
-      console.error("Failed to process event:", error)
+      console.error("Error processing events:", error)
+    } finally {
+      // Clear processing session after completion
+      setTimeout(() => setProcessingSessionId(undefined), 1000)
     }
+
   }
 
   return (
@@ -47,10 +59,11 @@ export default function MainPage() {
           isPending={processEvents.isPending}
         />
 
-        <MainEventsSection
-          events={events}
+                <MainEventsSection 
+          events={events} 
           isLoading={processEvents.isPending}
           showLoadingCards={3}
+          processingSessionId={processingSessionId}
         />
       </div>
     </div>

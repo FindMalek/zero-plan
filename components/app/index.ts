@@ -1,0 +1,7 @@
+export { MainBackground } from "./main-background"
+export { MainEventsSection } from "./main-events-section"
+export { MainHeader } from "./main-header"
+export { MainInputSection } from "./main-input-section"
+export { MainEventCard } from "./main-event-card"
+export { MainProgressBar } from "./main-progress-bar"
+

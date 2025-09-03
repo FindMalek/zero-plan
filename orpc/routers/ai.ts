@@ -70,11 +70,11 @@ export const generateEvents = baseProcedure
         }
       }
 
-      // Create processing session
+      // Create processing session with initial progress
       const processingSession = await database.inputProcessingSession.create({
         data: {
           userInput: input.userInput,
-          processedOutput: {},
+          processedOutput: { progress: 15, stage: "Sending your request to our AI assistant..." },
           model: MODEL_NAME,
           provider: "openai",
           status: "PROCESSING",
@@ -83,7 +83,21 @@ export const generateEvents = baseProcedure
       })
 
       try {
-        // All time/date context will be provided by tools
+        // Update progress: Understanding input
+        await database.inputProcessingSession.update({
+          where: { id: processingSession.id },
+          data: {
+            processedOutput: { progress: 30, stage: "Understanding your event details and preferences..." },
+          },
+        })
+
+        // Update progress: Analyzing context  
+        await database.inputProcessingSession.update({
+          where: { id: processingSession.id },
+          data: {
+            processedOutput: { progress: 45, stage: "Analyzing context and extracting key information..." },
+          },
+        })
 
         // Use generateText with tools for enhanced context and formatting
         const result = await generateText({
@@ -160,6 +174,14 @@ After using tools to gather context and formatting, provide final JSON:
 }
 
 CRITICAL: Extract specific details, use tools for context, then provide detailed JSON structure.`,
+        })
+
+        // Update progress: Crafting events
+        await database.inputProcessingSession.update({
+          where: { id: processingSession.id },
+          data: {
+            processedOutput: { progress: 65, stage: "Crafting personalized events with AI magic..." },
+          },
         })
 
         // Parse the final text response as JSON for the structured data
@@ -529,7 +551,45 @@ Instructions:
     }
   })
 
+// Get progress for a processing session
+export const getProgress = baseProcedure
+  .input(z.object({
+    processingSessionId: z.string(),
+  }))
+  .output(z.object({
+    progress: z.number(),
+    stage: z.string(),
+    status: z.string(),
+  }))
+  .handler(async ({ input, context }) => {
+    const userId = context.user?.id || "user_1"
+    
+    const session = await database.inputProcessingSession.findFirst({
+      where: {
+        id: input.processingSessionId,
+        userId: userId,
+      },
+    })
+
+    if (!session) {
+      return {
+        progress: 0,
+        stage: "Session not found",
+        status: "FAILED",
+      }
+    }
+
+    const processedOutput = session.processedOutput as any
+    
+    return {
+      progress: processedOutput?.progress || 0,
+      stage: processedOutput?.stage || "Initializing...",
+      status: session.status,
+    }
+  })
+
 export const aiRouter = {
   generateEvents,
   regenerateEvents,
+  getProgress,
 }
