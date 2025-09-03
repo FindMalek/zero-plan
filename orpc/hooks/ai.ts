@@ -3,6 +3,7 @@
 import { orpc } from "@/orpc/client"
 import type { GenerateEventsRo } from "@/schemas/ai"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
 import { env } from "@/env"
 
 // Import the event keys factory for cache invalidation

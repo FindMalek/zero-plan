@@ -1,9 +1,7 @@
 import { tool } from "ai"
 import { z } from "zod"
-import {
-  getUserContext,
-  getDefaultLocation,
-} from "@/config/user-context"
+
+import { getDefaultLocation, getUserContext } from "@/config/user-context"
 
 /**
  * Tool for extracting locations and travel context from user input

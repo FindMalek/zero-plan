@@ -1,17 +1,15 @@
-import { tool } from "ai"
+import { generateObject, tool } from "ai"
 import { z } from "zod"
-import { generateObject } from "ai"
-import { aiModel } from "@/config/openai" 
-import { env } from "@/env"
-import { PROGRESS_STAGES, type ProgressContext } from "@/lib/utils/progress-helper"
+
+import { aiModel } from "@/config/openai"
 
 /**
  * AI-Powered Event Description Generator
- * 
+ *
  * Creates rich, contextual HTML descriptions for calendar events using AI.
  * Generates engaging, personalized descriptions that consider cultural context,
  * social aspects, and event specifics to make each event meaningful.
- * 
+ *
  * Key Features:
  * - Pure AI-based description generation using generateObject
  * - Cultural awareness (Tunisian context)
@@ -19,7 +17,7 @@ import { PROGRESS_STAGES, type ProgressContext } from "@/lib/utils/progress-help
  * - Social context consideration
  * - Motivational and encouraging language
  * - Proper HTML formatting
- * 
+ *
  * @example
  * ```typescript
  * const description = await generateEventDescriptionTool.execute({
@@ -46,32 +44,61 @@ export const generateEventDescriptionTool = tool({
     timeOfDay: z.string().optional().describe("Time of day context"),
     userInput: z.string().describe("Original user input for context"),
   }),
-  execute: async ({ eventType, eventTitle, peopleInvolved, location, duration, timeOfDay, userInput }) => {
+  execute: async ({
+    eventType,
+    eventTitle,
+    peopleInvolved,
+    location,
+    duration,
+    timeOfDay,
+    userInput,
+  }) => {
     // Pure AI-based description generation using generateObject for structured output
     const descriptionAnalysis = await generateObject({
       model: aiModel,
       schema: z.object({
-        htmlDescription: z.string().describe("Rich HTML description for the event (2-3 sentences)"),
-        tone: z.enum(['professional', 'casual', 'friendly', 'formal', 'encouraging']).describe("Tone used in the description"),
-        keyElements: z.array(z.string()).describe("Key elements highlighted in the description"),
-        culturalContext: z.string().optional().describe("Any cultural considerations included"),
+        htmlDescription: z
+          .string()
+          .describe("Rich HTML description for the event (2-3 sentences)"),
+        tone: z
+          .enum(["professional", "casual", "friendly", "formal", "encouraging"])
+          .describe("Tone used in the description"),
+        keyElements: z
+          .array(z.string())
+          .describe("Key elements highlighted in the description"),
+        culturalContext: z
+          .string()
+          .optional()
+          .describe("Any cultural considerations included"),
         personalization: z.object({
-          includesPeople: z.boolean().describe("Whether people were mentioned in description"),
-          includesLocation: z.boolean().describe("Whether location was mentioned in description"), 
-          includesTiming: z.boolean().describe("Whether timing context was included"),
-          includesMotivation: z.boolean().describe("Whether motivational/encouraging elements were added")
+          includesPeople: z
+            .boolean()
+            .describe("Whether people were mentioned in description"),
+          includesLocation: z
+            .boolean()
+            .describe("Whether location was mentioned in description"),
+          includesTiming: z
+            .boolean()
+            .describe("Whether timing context was included"),
+          includesMotivation: z
+            .boolean()
+            .describe("Whether motivational/encouraging elements were added"),
         }),
-        confidence: z.number().min(0).max(1).describe("Confidence in description quality")
+        confidence: z
+          .number()
+          .min(0)
+          .max(1)
+          .describe("Confidence in description quality"),
       }),
       prompt: `Create a rich, engaging HTML description for this calendar event. Make it personal, contextual, and culturally appropriate.
 
 EVENT DETAILS:
 - Type: ${eventType}
 - Title: "${eventTitle}"
-- People: ${peopleInvolved.join(', ') || 'Solo activity'}
-- Location: ${location || 'No specific location'}
+- People: ${peopleInvolved.join(", ") || "Solo activity"}
+- Location: ${location || "No specific location"}
 - Duration: ${duration} minutes
-- Time: ${timeOfDay || 'Any time'}
+- Time: ${timeOfDay || "Any time"}
 - User Context: "${userInput}"
 
 CULTURAL CONTEXT:
@@ -101,17 +128,17 @@ EXAMPLES:
 - Doctor appointment: "<p>🏥 Important <strong>medical appointment</strong> for your health and well-being. <em>Remember to bring necessary documents and arrive 10 minutes early.</em></p>"
 - Travel event: "<p>🚗 <strong>Travel time</strong> to reach your destination comfortably. <em>Estimated based on typical traffic conditions in Tunisia.</em></p>"
 
-Generate a rich HTML description that captures the essence and importance of this event.`
+Generate a rich HTML description that captures the essence and importance of this event.`,
     })
 
     return {
       description: descriptionAnalysis.object.htmlDescription,
-      generatedBy: 'ai',
+      generatedBy: "ai",
       confidence: descriptionAnalysis.object.confidence,
       tone: descriptionAnalysis.object.tone,
       keyElements: descriptionAnalysis.object.keyElements,
       personalization: descriptionAnalysis.object.personalization,
-      culturalContext: descriptionAnalysis.object.culturalContext
+      culturalContext: descriptionAnalysis.object.culturalContext,
     }
   },
 })

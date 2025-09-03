@@ -1,9 +1,10 @@
 import { tool } from "ai"
 import { z } from "zod"
+
 import {
-  getUserContext,
-  getPreferredTransportation,
   estimateTravelTime,
+  getPreferredTransportation,
+  getUserContext,
 } from "@/config/user-context"
 
 /**

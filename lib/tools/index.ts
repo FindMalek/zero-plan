@@ -5,7 +5,7 @@ export * from "./format-travel-event"
 export * from "./generate-event-description"
 export * from "./calculate-event-timing"
 
-// Event Planning Tools  
+// Event Planning Tools
 export * from "./analyze-user-intent"
 export * from "./plan-event-structure"
 

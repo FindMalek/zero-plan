@@ -1,20 +1,19 @@
 import { tool } from "ai"
 import { z } from "zod"
-import { PROGRESS_STAGES, type ProgressContext } from "@/lib/utils/progress-helper"
 
 /**
  * Enhanced Time Context Tool
- * 
+ *
  * Provides comprehensive current date, time, timezone, and scheduling context
  * for accurate event creation. This tool serves as the temporal foundation
  * for all event planning operations.
- * 
+ *
  * Key Features:
  * - Current date/time in multiple formats
- * - Timezone-aware calculations  
+ * - Timezone-aware calculations
  * - Relative date calculations (tomorrow, next week)
  * - Scheduling context for smart event placement
- * 
+ *
  * @example
  * ```typescript
  * const timeInfo = await getCurrentTimeInfoTool.execute({

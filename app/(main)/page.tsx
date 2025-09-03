@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { useGenerateEvents } from "@/orpc/hooks"
-import { env } from "@/env"
 import { EventSimpleRo } from "@/schemas"
+
+import { env } from "@/env"
 
 import { MainBackground } from "@/components/app/main-background"
 import { MainEventsSection } from "@/components/app/main-events-section"

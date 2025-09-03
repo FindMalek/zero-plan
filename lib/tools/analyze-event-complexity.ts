@@ -1,26 +1,23 @@
-import { tool } from "ai"
+import { generateObject, tool } from "ai"
 import { z } from "zod"
-import { generateObject } from "ai"
+
 import { aiModel } from "@/config/openai"
-import {
-  getUserContext,
-  getDefaultLocation,
-} from "@/config/user-context"
+import { getDefaultLocation, getUserContext } from "@/config/user-context"
 
 /**
  * AI-Powered Event Complexity Analyzer
- * 
+ *
  * Analyzes events using AI to determine if they require multi-event breakdown,
  * travel planning, and complex coordination. Considers cultural context,
  * practical logistics, and user preferences.
- * 
+ *
  * Key Features:
  * - Pure AI-based complexity analysis
  * - Intelligent travel requirement detection
  * - Cultural and practical considerations
  * - Multi-event sequence planning
  * - Context-aware decision making
- * 
+ *
  * @example
  * ```typescript
  * const analysis = await analyzeEventComplexityTool.execute({
@@ -64,54 +61,94 @@ export const analyzeEventComplexityTool = tool({
     const complexityAnalysis = await generateObject({
       model: aiModel,
       schema: z.object({
-        complexityLevel: z.enum(['simple', 'moderate', 'complex']).describe("Overall complexity level"),
-        needsMultipleEvents: z.boolean().describe("Whether this requires multiple related events"),
+        complexityLevel: z
+          .enum(["simple", "moderate", "complex"])
+          .describe("Overall complexity level"),
+        needsMultipleEvents: z
+          .boolean()
+          .describe("Whether this requires multiple related events"),
         travelRequirements: z.object({
           needsTravel: z.boolean().describe("Whether travel is required"),
           origin: z.string().nullable().describe("Starting location"),
           destination: z.string().nullable().describe("Destination location"),
-          transportMode: z.string().nullable().describe("Recommended transport mode"),
-          estimatedTravelTime: z.number().describe("Estimated travel time in minutes"),
-          needsReturnTrip: z.boolean().describe("Whether a return trip is needed")
+          transportMode: z
+            .string()
+            .nullable()
+            .describe("Recommended transport mode"),
+          estimatedTravelTime: z
+            .number()
+            .describe("Estimated travel time in minutes"),
+          needsReturnTrip: z
+            .boolean()
+            .describe("Whether a return trip is needed"),
         }),
         eventBreakdown: z.object({
           totalEvents: z.number().describe("Total number of events to create"),
           mainEvent: z.object({
             title: z.string(),
             duration: z.number().describe("Duration in minutes"),
-            type: z.string()
+            type: z.string(),
           }),
-          supportingEvents: z.array(z.object({
-            type: z.enum(['travel_to', 'travel_from', 'preparation', 'buffer']),
-            title: z.string(),
-            duration: z.number().describe("Duration in minutes"),
-            purpose: z.string().describe("Why this event is needed")
-          }))
+          supportingEvents: z.array(
+            z.object({
+              type: z.enum([
+                "travel_to",
+                "travel_from",
+                "preparation",
+                "buffer",
+              ]),
+              title: z.string(),
+              duration: z.number().describe("Duration in minutes"),
+              purpose: z.string().describe("Why this event is needed"),
+            })
+          ),
         }),
         coordinationNeeds: z.object({
-          timeCoordination: z.boolean().describe("Needs precise time coordination"),
-          locationCoordination: z.boolean().describe("Needs location coordination"),
-          peopleCoordination: z.boolean().describe("Needs coordination with other people"),
-          flexibilityLevel: z.enum(['rigid', 'semi_flexible', 'flexible'])
+          timeCoordination: z
+            .boolean()
+            .describe("Needs precise time coordination"),
+          locationCoordination: z
+            .boolean()
+            .describe("Needs location coordination"),
+          peopleCoordination: z
+            .boolean()
+            .describe("Needs coordination with other people"),
+          flexibilityLevel: z.enum(["rigid", "semi_flexible", "flexible"]),
         }),
         culturalFactors: z.object({
-          localCustoms: z.array(z.string()).describe("Relevant Tunisian customs"),
-          socialExpectations: z.array(z.string()).describe("Social expectations"),
-          practicalConsiderations: z.array(z.string()).describe("Local practical factors")
+          localCustoms: z
+            .array(z.string())
+            .describe("Relevant Tunisian customs"),
+          socialExpectations: z
+            .array(z.string())
+            .describe("Social expectations"),
+          practicalConsiderations: z
+            .array(z.string())
+            .describe("Local practical factors"),
         }),
-        riskFactors: z.array(z.string()).describe("Potential issues or complications"),
-        optimizationOpportunities: z.array(z.string()).describe("Ways to improve the plan"),
-        confidence: z.number().min(0).max(1).describe("Confidence in the analysis"),
-        reasoningNotes: z.string().describe("Explanation of the complexity assessment")
+        riskFactors: z
+          .array(z.string())
+          .describe("Potential issues or complications"),
+        optimizationOpportunities: z
+          .array(z.string())
+          .describe("Ways to improve the plan"),
+        confidence: z
+          .number()
+          .min(0)
+          .max(1)
+          .describe("Confidence in the analysis"),
+        reasoningNotes: z
+          .string()
+          .describe("Explanation of the complexity assessment"),
       }),
       prompt: `Analyze this event for complexity and determine if it needs multi-event breakdown.
 
 EVENT DETAILS:
 - Title: "${eventTitle}"
 - Type: ${eventType}
-- Location: ${eventLocation || 'Not specified'}
+- Location: ${eventLocation || "Not specified"}
 - User Input: "${userInput}"
-- Mentioned Locations: ${mentionedLocations.join(', ') || 'None'}
+- Mentioned Locations: ${mentionedLocations.join(", ") || "None"}
 
 USER CONTEXT:
 - Home Location: ${homeLocation.name}
@@ -152,11 +189,11 @@ TUNISIAN CONTEXT:
 - Family and social obligations take priority
 - Punctuality expectations vary by event type
 
-Provide a thorough analysis that considers all practical and cultural factors.`
+Provide a thorough analysis that considers all practical and cultural factors.`,
     })
 
     return {
-      isComplex: complexityAnalysis.object.complexityLevel !== 'simple',
+      isComplex: complexityAnalysis.object.complexityLevel !== "simple",
       complexityLevel: complexityAnalysis.object.complexityLevel,
       needsMultipleEvents: complexityAnalysis.object.needsMultipleEvents,
       needsTravel: complexityAnalysis.object.travelRequirements.needsTravel,
@@ -166,10 +203,11 @@ Provide a thorough analysis that considers all practical and cultural factors.`
       coordinationNeeds: complexityAnalysis.object.coordinationNeeds,
       culturalFactors: complexityAnalysis.object.culturalFactors,
       riskFactors: complexityAnalysis.object.riskFactors,
-      optimizationOpportunities: complexityAnalysis.object.optimizationOpportunities,
+      optimizationOpportunities:
+        complexityAnalysis.object.optimizationOpportunities,
       confidence: complexityAnalysis.object.confidence,
       reasoningNotes: complexityAnalysis.object.reasoningNotes,
-      analysisType: 'ai_based'
+      analysisType: "ai_based",
     }
   },
 })

@@ -125,15 +125,19 @@ export function MainEventCard({
             }}
           />
         )}
-        
+
         {/* Event date - bottom right */}
         <div className="flex justify-end pt-2">
           <span className="text-xs text-slate-500 dark:text-slate-500">
-            📅 {event.startTime.toLocaleDateString([], {
+            📅{" "}
+            {event.startTime.toLocaleDateString([], {
               weekday: "short",
-              month: "short", 
+              month: "short",
               day: "numeric",
-              year: event.startTime.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined
+              year:
+                event.startTime.getFullYear() !== new Date().getFullYear()
+                  ? "numeric"
+                  : undefined,
             })}
           </span>
         </div>

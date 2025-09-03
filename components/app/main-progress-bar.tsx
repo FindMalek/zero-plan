@@ -1,8 +1,10 @@
 "use client"
 
 import { useProgress } from "@/orpc/hooks"
-import { Progress } from "@/components/ui/progress"
+
 import { env } from "@/env"
+
+import { Progress } from "@/components/ui/progress"
 
 interface MainProgressBarProps {
   isVisible: boolean
