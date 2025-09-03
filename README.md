@@ -41,29 +41,33 @@ Zero Planner is an intelligent event planning application that makes scheduling 
 3. Set up the database:
 
    **Option A: Using Docker (Recommended for development)**
-   
+
    Start the PostgreSQL database using Docker:
+
    ```bash
    pnpm docker:setup
    ```
-   
+
    This will:
+
    - Start PostgreSQL container on port 5434
    - Push the Prisma schema to the database
    - Generate the Prisma client
-   
+
    **Option B: Using existing PostgreSQL**
-   
+
    If you have PostgreSQL already installed, create a database and update the connection string.
 
 4. Set up environment variables:
-   
+
    Copy the environment example and configure your variables:
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Update the `.env` file with your specific values:
+
    ```
    DATABASE_URL="postgresql://zero_plan_user:zero_plan_password@localhost:5434/zero_plan"
    BETTER_AUTH_SECRET="your-secret-key-here-min-10-chars"
@@ -105,11 +109,13 @@ Zero Planner is an intelligent event planning application that makes scheduling 
 ## Usage
 
 1. **Natural Language Input:** Describe your events in plain English:
+
    - "I have a doctor appointment tomorrow at 3 PM"
    - "Meeting with John next Friday at 10 AM in the conference room"
    - "Birthday party this Saturday at 8 PM"
 
 2. **AI Processing:** The application uses OpenAI to parse your input and extract:
+
    - Event titles and descriptions
    - Dates and times
    - Locations

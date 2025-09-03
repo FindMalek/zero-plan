@@ -1,18 +1,26 @@
 "use client"
 
-import { Progress } from "@/components/ui/progress"
 import { useProgress } from "@/orpc/hooks"
+
+import { Progress } from "@/components/ui/progress"
 
 interface MainProgressBarProps {
   isVisible: boolean
   processingSessionId?: string
 }
 
-export function MainProgressBar({ isVisible, processingSessionId }: MainProgressBarProps) {
-  const { data: progressData, isLoading, error } = useProgress(processingSessionId || null, isVisible)
+export function MainProgressBar({
+  isVisible,
+  processingSessionId,
+}: MainProgressBarProps) {
+  const {
+    data: progressData,
+    isLoading,
+    error,
+  } = useProgress(processingSessionId || null, isVisible)
 
   // Debug logging (only in development)
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.log("🔄 Progress Bar Debug:", {
       isVisible,
       processingSessionId,
@@ -37,8 +45,8 @@ export function MainProgressBar({ isVisible, processingSessionId }: MainProgress
           {progress}%
         </span>
       </div>
-      <Progress 
-        value={progress} 
+      <Progress
+        value={progress}
         className="h-2 bg-slate-100 dark:bg-slate-700"
       />
     </div>

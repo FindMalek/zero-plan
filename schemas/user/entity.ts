@@ -67,3 +67,48 @@ export const userStatsSchema = z.object({
 })
 
 export type UserStats = z.infer<typeof userStatsSchema>
+
+// =============================================================================
+// USER CONTEXT SCHEMAS (for AI event generation)
+// =============================================================================
+
+// User Location Schema
+export const userLocationSchema = z.object({
+  name: z.string(),
+  address: z.string(),
+  isDefault: z.boolean(),
+  type: z.enum(["home", "work", "other"]),
+})
+
+export type UserLocation = z.infer<typeof userLocationSchema>
+
+// Transportation Preference Schema
+export const transportationPreferenceSchema = z.object({
+  mode: z.enum(["car", "bike", "scooter", "walk", "bus", "taxi"]),
+  isDefault: z.boolean(),
+  estimatedSpeed: z.number(), // km/h
+  setupTime: z.number(), // minutes needed to prepare
+  emoji: z.string(),
+})
+
+export type TransportationPreference = z.infer<
+  typeof transportationPreferenceSchema
+>
+
+// User Context Schema
+export const userContextSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  locations: z.array(userLocationSchema),
+  transportation: z.array(transportationPreferenceSchema),
+  preferences: z.object({
+    defaultTravelBuffer: z.number(), // minutes before/after events
+    preferredTravelMode: z.string(),
+    workingHours: z.object({
+      start: z.string(), // HH:mm
+      end: z.string(), // HH:mm
+    }),
+  }),
+})
+
+export type UserContext = z.infer<typeof userContextSchema>

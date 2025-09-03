@@ -13,7 +13,8 @@ export const aiKeys = {
   generations: () => [...aiKeys.all, "generation"] as const,
   generation: (sessionId: string) =>
     [...aiKeys.generations(), sessionId] as const,
-  progress: (sessionId: string) => [...aiKeys.all, "progress", sessionId] as const,
+  progress: (sessionId: string) =>
+    [...aiKeys.all, "progress", sessionId] as const,
 }
 
 // Generate Events Hook
@@ -58,22 +59,25 @@ export function useRegenerateEvents() {
 }
 
 // Progress Hook
-export function useProgress(processingSessionId: string | null, enabled: boolean = false) {
+export function useProgress(
+  processingSessionId: string | null,
+  enabled: boolean = false
+) {
   return useQuery({
     queryKey: aiKeys.progress(processingSessionId || ""),
     queryFn: async () => {
       if (!processingSessionId) {
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === "development") {
           console.log("⚠️ No processing session ID provided")
         }
         return null
       }
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === "development") {
         console.log("🔍 Fetching progress for session:", processingSessionId)
       }
       try {
         const result = await orpc.ai.getProgress.call({ processingSessionId })
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === "development") {
           console.log("📊 Progress result:", result)
         }
         return result

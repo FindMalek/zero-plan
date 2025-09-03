@@ -27,9 +27,12 @@ export function MainEventsSection({
       <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
         Your Events
       </h2>
-      
-      <MainProgressBar isVisible={isLoading} processingSessionId={processingSessionId} />
-      
+
+      <MainProgressBar
+        isVisible={isLoading}
+        processingSessionId={processingSessionId}
+      />
+
       <div className="space-y-3">
         {events.map((event) => (
           <MainEventCard key={event.id} event={event} />

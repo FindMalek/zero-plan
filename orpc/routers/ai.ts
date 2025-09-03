@@ -12,10 +12,16 @@ import { z } from "zod"
 
 import { aiModel, MODEL_NAME, PROVIDER_NAME } from "@/config/openai"
 import {
+  analyzeEventComplexityTool,
+  analyzeUserIntentTool,
   calculateEventTimingTool,
+  extractLocationContextTool,
   formatTravelEventTool,
   generateEventDescriptionTool,
+  generateEventSequenceTool,
   getCurrentTimeInfoTool,
+  planEventStructureTool,
+  planTravelEventsTool,
   selectEventEmojiTool,
 } from "@/lib/tools"
 
@@ -74,7 +80,10 @@ export const generateEvents = baseProcedure
       const processingSession = await database.inputProcessingSession.create({
         data: {
           userInput: input.userInput,
-          processedOutput: { progress: 15, stage: "Sending your request to our AI assistant..." },
+          processedOutput: {
+            progress: 15,
+            stage: "Sending your request to our AI assistant...",
+          },
           model: MODEL_NAME,
           provider: "openai",
           status: "PROCESSING",
@@ -87,15 +96,21 @@ export const generateEvents = baseProcedure
         await database.inputProcessingSession.update({
           where: { id: processingSession.id },
           data: {
-            processedOutput: { progress: 30, stage: "Understanding your event details and preferences..." },
+            processedOutput: {
+              progress: 30,
+              stage: "Understanding your event details and preferences...",
+            },
           },
         })
 
-        // Update progress: Analyzing context  
+        // Update progress: Analyzing context
         await database.inputProcessingSession.update({
           where: { id: processingSession.id },
           data: {
-            processedOutput: { progress: 45, stage: "Analyzing context and extracting key information..." },
+            processedOutput: {
+              progress: 45,
+              stage: "Analyzing context and extracting key information...",
+            },
           },
         })
 
@@ -108,79 +123,113 @@ export const generateEvents = baseProcedure
             formatTravelEvent: formatTravelEventTool,
             generateEventDescription: generateEventDescriptionTool,
             calculateEventTiming: calculateEventTimingTool,
+            analyzeEventComplexity: analyzeEventComplexityTool,
+            planTravelEvents: planTravelEventsTool,
+            generateEventSequence: generateEventSequenceTool,
+            extractLocationContext: extractLocationContextTool,
+            analyzeUserIntent: analyzeUserIntentTool,
+            planEventStructure: planEventStructureTool,
           },
-          stopWhen: stepCountIs(5),
-          prompt: `You are a highly intelligent event planning assistant. Parse the following input into structured events with SPECIFIC, DETAILED titles that include ALL relevant context.
+          stopWhen: stepCountIs(10),
+          prompt: `You are a master event planning AI with deep understanding of user intent. Your mission is to transform any user request into comprehensive, realistic event sequences that account for the complete user journey.
+
+🎯 CORE MISSION: Transform requests like "coffee with friend" into complete journeys:
+1. 🚗 Travel to location → 2. ☕ Main event → 3. 🚗 Return travel
 
 CONTEXT:
-- Calendar: "${activeCalendar.name}"
+- Calendar: "${activeCalendar.name}" 
+- USER INPUT: "${input.userInput}"
 
-USER INPUT: "${input.userInput}"
+🧠 MASTER PLANNING WORKFLOW:
 
-🚨 CRITICAL TITLE FORMATTING RULES:
-NEVER create generic titles! Always extract and include specific details from the input:
+STEP 1: ANALYZE USER INTENT (REQUIRED FIRST STEP)
+Use analyzeUserIntent tool with current datetime to understand:
+- What activities the user really wants to do
+- How complex their request is 
+- What locations and timing are involved
+- The complete scope of their needs
 
-✅ REQUIRED FORMATS:
-🩺 Medical: "🩺 Doctor (Specialty/Purpose)" - e.g., "🩺 Doctor (Annual Checkup)", "🩺 Doctor (Cardiology)"
-🚗 Travel: "🚗 Car (Origin -> Destination)" - MUST include both locations with arrow format
-🎉 Social: "🎉 Event (Person's Full Name)" - e.g., "🎉 Birthday Party (Ayoub Fanter)"
-♒ Work: "♒ Activity (Project/Type)" - e.g., "♒Jobflow (Client Review)"
+STEP 2: PLAN EVENT STRUCTURE (REQUIRED SECOND STEP) 
+Use planEventStructure tool with the intent analysis to:
+- Create detailed event breakdown and timing
+- Account for travel, preparation, and logistics
+- Coordinate multiple activities if needed
+- Optimize the complete event flow
 
-❌ FORBIDDEN - NEVER USE THESE GENERIC PATTERNS:
-- "Doctor appointment" ← BAD, use "🩺 Doctor (Purpose/Specialty)"
-- "Travel to X" ← BAD, use "🚗 Car (Origin -> Destination)"
-- "Birthday party" ← BAD, use "🎉 Birthday Party (Person's Name)"
-- "Meeting" ← BAD, use "👥 Meeting (Topic/With Whom)"
+STEP 3: GET TIME CONTEXT
+Use getCurrentTimeInfo tool for accurate datetime context
 
-EXTRACTION INSTRUCTIONS:
-1. FIRST: Use getCurrentTimeInfo tool for accurate date/time context
-2. For EACH event identified:
-   - Extract ALL names, places, and specific details mentioned
-   - Use selectEventEmoji for contextually appropriate emoji
-   - For travel: Use formatTravelEvent to extract origin AND destination
-   - Use generateEventDescription for rich HTML descriptions
-3. Title Quality Standards:
-   - Medical appointments: Always include specialty or purpose in parentheses
-   - Travel events: Always specify "Origin -> Destination" format
-   - Social events: Always include person's full name when mentioned
-   - Work events: Include project name or meeting type
-   - If specific details aren't clear, use most specific available info
+STEP 4: GENERATE INDIVIDUAL EVENTS
+For each structured event from Step 2:
+- Use selectEventEmoji for appropriate emoji
+- Use generateEventDescription for rich, contextual content  
+- Use formatTravelEvent for travel events
+- Use calculateEventTiming for optimal scheduling
 
-PROCESSING EXAMPLE:
-Input: "appointment tomorrow at the doctor, go to Gafsa from Ksar Hellal, birthday party of friend Ayoub at 8pm"
-Output titles:
-- "🩺 Doctor (Appointment)" ← includes purpose
-- "🚗 Car (Ksar Hellal -> Gafsa)" ← includes both locations with arrow  
-- "🎉 Birthday Party (Ayoub)" ← includes person's name
+🎯 INTELLIGENT EVENT CREATION STRATEGY:
 
-After using tools to gather context and formatting, provide final JSON:
+🔸 SIMPLE EVENTS (single activity, no travel):
+- Work from home, personal tasks
+- Create 1 event with rich description
+
+🔸 TRAVEL-REQUIRED EVENTS (most common):  
+- Coffee meetups, appointments, social visits
+- Create 3 events: Outbound Travel → Main Activity → Return Travel
+
+🔸 COMPLEX MULTI-EVENTS:
+- Multiple locations/activities in sequence
+- Create optimized event chain with travel coordination
+
+🚨 CRITICAL SUCCESS FACTORS:
+
+✅ TITLE EXCELLENCE:
+- "🚗 Car (Ksar Hellal → Sayeda)" not "Travel"
+- "☕ Coffee (Iheb Souid)" not "Coffee meeting"  
+- "🩺 Doctor (Cardiology Check)" not "Appointment"
+
+✅ COMPREHENSIVE PLANNING:
+- Always think about the complete user journey
+- Include realistic travel time and buffers
+- Consider logistics and preparation needs
+
+✅ CONTEXTUAL INTELLIGENCE:
+- Extract specific names, places, times from input
+- Use local knowledge (Tunisian cities/culture)
+- Provide rich, actionable event descriptions
+
+STEP 5: FINAL STRUCTURED OUTPUT
+Provide complete JSON with ALL events in chronological order:
+
 {
   "events": [
     {
-      "emoji": "🩺",
-      "title": "🩺 Doctor (Specific Purpose/Specialty)",
-      "description": "<p>Rich HTML description</p>",
-      "startTime": "2024-12-21T09:00:00.000Z",
-      "endTime": "2024-12-21T10:00:00.000Z",
+      "emoji": "🚗",
+      "title": "🚗 Car (Ksar Hellal → Sayeda)",
+      "description": "<p>Travel details with timing, route, and helpful tips</p>",
+      "startTime": "2024-12-21T14:30:00.000Z",
+      "endTime": "2024-12-21T14:45:00.000Z", 
       "timezone": "UTC",
       "isAllDay": false,
-      "location": "Optional location",
-      "confidence": 0.9
+      "location": "Ksar Hellal to Sayeda",
+      "confidence": 0.8
     }
   ],
-  "processingNotes": "Details about what specific information was extracted",
+  "processingNotes": "Master planning analysis: [brief summary of intent and strategy]",
   "confidence": 0.85,
-  "contextUsed": ["extracted", "context", "clues"]
+  "contextUsed": ["intent_analysis", "event_structure", "travel_optimization"]
 }
 
-CRITICAL: Extract specific details, use tools for context, then provide detailed JSON structure.`,
+🚀 EXECUTION PRIORITY: Always start with analyzeUserIntent and planEventStructure tools for intelligent, comprehensive event planning that serves the user's real needs.`,
         })
 
         // Update progress: Crafting events
         await database.inputProcessingSession.update({
           where: { id: processingSession.id },
           data: {
-            processedOutput: { progress: 65, stage: "Crafting personalized events with AI magic..." },
+            processedOutput: {
+              progress: 65,
+              stage: "Crafting personalized events with AI magic...",
+            },
           },
         })
 
@@ -553,17 +602,21 @@ Instructions:
 
 // Get progress for a processing session
 export const getProgress = baseProcedure
-  .input(z.object({
-    processingSessionId: z.string(),
-  }))
-  .output(z.object({
-    progress: z.number(),
-    stage: z.string(),
-    status: z.string(),
-  }))
+  .input(
+    z.object({
+      processingSessionId: z.string(),
+    })
+  )
+  .output(
+    z.object({
+      progress: z.number(),
+      stage: z.string(),
+      status: z.string(),
+    })
+  )
   .handler(async ({ input, context }) => {
     const userId = context.user?.id || "user_1"
-    
+
     const session = await database.inputProcessingSession.findFirst({
       where: {
         id: input.processingSessionId,
@@ -580,7 +633,7 @@ export const getProgress = baseProcedure
     }
 
     const processedOutput = session.processedOutput as any
-    
+
     return {
       progress: processedOutput?.progress || 0,
       stage: processedOutput?.stage || "Initializing...",
