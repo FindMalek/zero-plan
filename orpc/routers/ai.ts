@@ -24,6 +24,11 @@ import {
   planTravelEventsTool,
   selectEventEmojiTool,
 } from "@/lib/tools"
+import {
+  PROGRESS_STAGES,
+  TOOL_PROGRESS_MAP,
+  updateProgress,
+} from "@/lib/utils/progress-helper"
 
 import type { ORPCContext } from "../types"
 
@@ -80,10 +85,7 @@ export const generateEvents = baseProcedure
       const processingSession = await database.inputProcessingSession.create({
         data: {
           userInput: input.userInput,
-          processedOutput: {
-            progress: 15,
-            stage: "Sending your request to our AI assistant...",
-          },
+          processedOutput: PROGRESS_STAGES.INITIALIZING,
           model: MODEL_NAME,
           provider: "openai",
           status: "PROCESSING",
@@ -92,28 +94,6 @@ export const generateEvents = baseProcedure
       })
 
       try {
-        // Update progress: Understanding input
-        await database.inputProcessingSession.update({
-          where: { id: processingSession.id },
-          data: {
-            processedOutput: {
-              progress: 30,
-              stage: "Understanding your event details and preferences...",
-            },
-          },
-        })
-
-        // Update progress: Analyzing context
-        await database.inputProcessingSession.update({
-          where: { id: processingSession.id },
-          data: {
-            processedOutput: {
-              progress: 45,
-              stage: "Analyzing context and extracting key information...",
-            },
-          },
-        })
-
         // Use generateText with tools for enhanced context and formatting
         const result = await generateText({
           model: aiModel,
@@ -131,6 +111,24 @@ export const generateEvents = baseProcedure
             planEventStructure: planEventStructureTool,
           },
           stopWhen: stepCountIs(10),
+          onStepFinish: async (step) => {
+            // Track progress when tools are executed
+            if (step.toolCalls && step.toolCalls.length > 0) {
+              for (const toolCall of step.toolCalls) {
+                const toolName =
+                  toolCall.toolName as keyof typeof TOOL_PROGRESS_MAP
+                const progressStage = TOOL_PROGRESS_MAP[toolName]
+
+                if (progressStage) {
+                  await updateProgress(
+                    processingSession.id,
+                    progressStage.progress,
+                    progressStage.stage
+                  )
+                }
+              }
+            }
+          },
           prompt: `You are a master event planning AI with deep understanding of user intent. Your mission is to transform any user request into comprehensive, realistic event sequences that account for the complete user journey.
 
 🎯 CORE MISSION: Transform requests like "coffee with friend" into complete journeys:
@@ -242,16 +240,12 @@ Provide complete JSON with ALL events in chronological order:
 🚀 EXECUTION PRIORITY: Always start with analyzeUserIntent and planEventStructure tools for intelligent, comprehensive event planning that serves the user's real needs.`,
         })
 
-        // Update progress: Crafting events
-        await database.inputProcessingSession.update({
-          where: { id: processingSession.id },
-          data: {
-            processedOutput: {
-              progress: 65,
-              stage: "Crafting personalized events with AI magic...",
-            },
-          },
-        })
+        // Update progress: Finalizing
+        await updateProgress(
+          processingSession.id,
+          PROGRESS_STAGES.FINALIZING_EVENTS.progress,
+          PROGRESS_STAGES.FINALIZING_EVENTS.stage
+        )
 
         // Parse the final text response as JSON for the structured data
         const finalMessage = result.text
@@ -346,6 +340,13 @@ Provide complete JSON with ALL events in chronological order:
           })
         }
 
+        // Update progress: Completed
+        await updateProgress(
+          processingSession.id,
+          PROGRESS_STAGES.COMPLETED.progress,
+          PROGRESS_STAGES.COMPLETED.stage
+        )
+
         return {
           success: true,
           events: createdEvents,
@@ -359,9 +360,17 @@ Provide complete JSON with ALL events in chronological order:
       } catch (aiError: any) {
         console.error("AI generation error:", aiError)
 
+        // Update progress: Failed
+        await updateProgress(
+          processingSession.id,
+          PROGRESS_STAGES.FAILED.progress,
+          PROGRESS_STAGES.FAILED.stage
+        )
+
         await database.inputProcessingSession.update({
           where: { id: processingSession.id },
           data: {
+            processedOutput: PROGRESS_STAGES.FAILED,
             status: "FAILED",
             errorMessage: aiError.message,
             processingTimeMs: Date.now() - startTime,
@@ -383,239 +392,6 @@ Provide complete JSON with ALL events in chronological order:
       return {
         success: false,
         error: "An unexpected error occurred. Please try again later.",
-      }
-    }
-  })
-
-// Re-generate Events (regenerate existing events with new AI interpretation)
-export const regenerateEvents = baseProcedure
-  .input(
-    z.object({
-      processingSessionId: z
-        .string()
-        .describe("ID of the original processing session to regenerate"),
-      context: z
-        .string()
-        .optional()
-        .describe("Additional context for better regeneration"),
-    })
-  )
-  .output(generateEventsRo)
-  .handler(async ({ input, context }) => {
-    try {
-      // For MVP: Use demo user if no authentication
-      const userId = context.user?.id || "user_1"
-
-      // Get original processing session
-      const originalSession = await database.inputProcessingSession.findFirst({
-        where: {
-          id: input.processingSessionId,
-          userId: userId,
-        },
-        include: {
-          event: {
-            include: {
-              calendar: true,
-            },
-          },
-        },
-      })
-
-      if (!originalSession) {
-        return {
-          success: false,
-          error:
-            "Processing session not found or you don't have permission to access it",
-        }
-      }
-
-      if (!originalSession.event) {
-        return {
-          success: false,
-          error: "No event associated with this processing session",
-        }
-      }
-
-      // Delete the old event (we'll create a new one)
-      await database.event.delete({
-        where: { id: originalSession.event.id },
-      })
-
-      // Use the generateEvents endpoint with the same input but new context
-      const regenerationInput = {
-        userInput: originalSession.userInput,
-        calendarId: originalSession.event.calendarId,
-        context: input.context
-          ? `Regeneration context: ${input.context}`
-          : "This is a regeneration of a previous event",
-      }
-
-      // Call generateEvents with the same logic
-      const startTime = Date.now()
-
-      // Validate calendar access
-      const calendar = await database.calendar.findFirst({
-        where: {
-          id: regenerationInput.calendarId,
-          userId: userId,
-        },
-      })
-
-      if (!calendar) {
-        return {
-          success: false,
-          error: "Calendar not found or you don't have permission to access it",
-        }
-      }
-
-      // Create processing session
-      const processingSession = await database.inputProcessingSession.create({
-        data: {
-          userInput: regenerationInput.userInput,
-          processedOutput: {},
-          model: MODEL_NAME,
-          provider: PROVIDER_NAME,
-          status: "PROCESSING",
-          userId: userId,
-        },
-      })
-
-      try {
-        // Get current date/time for context
-        const now = new Date()
-        const currentDateTime = now.toISOString()
-
-        // Use generateObject for structured AI output
-        const { object: aiResponse } = await generateObject({
-          model: aiModel,
-          schema: aiEventGenerationSchema,
-          prompt: `You are an intelligent event planning assistant. Parse the following natural language input into structured events.
-
-Current date and time: ${currentDateTime}
-Calendar context: Creating events for calendar "${calendar.name}"
-${regenerationInput.context ? `Additional context: ${regenerationInput.context}` : ""}
-
-User input: "${regenerationInput.userInput}"
-
-Instructions:
-- Extract all possible events from the input
-- Use appropriate emojis for each event type
-- Set realistic start/end times based on current date/time
-- IMPORTANT: Only use these valid timezones: UTC, AMERICA_NEW_YORK, AMERICA_CHICAGO, AMERICA_DENVER, AMERICA_LOS_ANGELES, EUROPE_LONDON, EUROPE_PARIS, EUROPE_BERLIN, ASIA_TOKYO, ASIA_SINGAPORE, ASIA_DUBAI, AUSTRALIA_SYDNEY
-- If location suggests Africa/Middle East, use EUROPE_PARIS timezone
-- Set confidence scores based on how clearly specified each event is
-- Use isAllDay=true for events without specific times
-- Include location if mentioned or can be inferred`,
-        })
-
-        const processingTimeMs = Date.now() - startTime
-
-        // Update processing session
-        await database.inputProcessingSession.update({
-          where: { id: processingSession.id },
-          data: {
-            processedOutput: JSON.parse(JSON.stringify(aiResponse)),
-            status: "COMPLETED",
-            processingTimeMs,
-            confidence: aiResponse.confidence,
-          },
-        })
-
-        // Create events in database
-        const createdEvents = []
-
-        for (const eventData of aiResponse.events) {
-          // Ensure timezone is valid (fallback to UTC if invalid)
-          const validTimezones = [
-            "UTC",
-            "AMERICA_NEW_YORK",
-            "AMERICA_CHICAGO",
-            "AMERICA_DENVER",
-            "AMERICA_LOS_ANGELES",
-            "EUROPE_LONDON",
-            "EUROPE_PARIS",
-            "EUROPE_BERLIN",
-            "ASIA_TOKYO",
-            "ASIA_SINGAPORE",
-            "ASIA_DUBAI",
-            "AUSTRALIA_SYDNEY",
-          ]
-          const timezone = validTimezones.includes(eventData.timezone)
-            ? eventData.timezone
-            : "UTC"
-
-          const event = await database.event.create({
-            data: {
-              emoji: eventData.emoji,
-              title: eventData.title,
-              description: eventData.description,
-              startTime: new Date(eventData.startTime),
-              endTime: eventData.endTime
-                ? new Date(eventData.endTime)
-                : undefined,
-              timezone: timezone,
-              isAllDay: eventData.isAllDay,
-              location: eventData.location,
-              maxParticipants: eventData.maxParticipants,
-              links: eventData.links || [],
-              aiConfidence: eventData.confidence,
-              userId: userId,
-              calendarId: regenerationInput.calendarId,
-            },
-            select: EventQuery.getSelect(),
-          })
-
-          // Link processing session to event
-          await database.inputProcessingSession.update({
-            where: { id: processingSession.id },
-            data: { eventId: event.id },
-          })
-
-          // Transform using EventEntity and add confidence
-          const eventRo = EventEntity.toRo(event)
-          createdEvents.push({
-            ...eventRo,
-            confidence: eventData.confidence,
-          })
-        }
-
-        return {
-          success: true,
-          events: createdEvents,
-          processingSession: {
-            id: processingSession.id,
-            confidence: aiResponse.confidence,
-            processingTimeMs,
-          },
-        }
-      } catch (aiError: any) {
-        console.error("AI regeneration error:", aiError)
-
-        await database.inputProcessingSession.update({
-          where: { id: processingSession.id },
-          data: {
-            status: "FAILED",
-            errorMessage: aiError.message,
-            processingTimeMs: Date.now() - startTime,
-          },
-        })
-
-        return {
-          success: false,
-          error:
-            "Failed to regenerate events with AI. Please try again or create events manually.",
-        }
-      }
-    } catch (error: any) {
-      if (error instanceof ORPCError) {
-        throw error
-      }
-
-      console.error("Unexpected error in event regeneration:", error)
-      return {
-        success: false,
-        error:
-          "An unexpected error occurred during regeneration. Please try again later.",
       }
     }
   })
@@ -663,6 +439,5 @@ export const getProgress = baseProcedure
 
 export const aiRouter = {
   generateEvents,
-  regenerateEvents,
   getProgress,
 }

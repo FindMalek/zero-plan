@@ -197,4 +197,3 @@ model EventParticipant {
   @@index([rsvpStatus])
   @@map("event_participant")
 }
-

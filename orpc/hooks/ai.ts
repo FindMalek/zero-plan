@@ -39,27 +39,6 @@ export function useGenerateEvents() {
   })
 }
 
-// Regenerate Events Hook
-export function useRegenerateEvents() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (input: { processingSessionId: string; context?: string }) =>
-      orpc.ai.regenerateEvents.call(input),
-    onSuccess: (data: GenerateEventsRo) => {
-      if (data.success) {
-        // Invalidate event lists since we modified events
-        queryClient.invalidateQueries({
-          queryKey: eventKeys.lists(),
-        })
-      }
-    },
-    onError: (error) => {
-      console.error("Failed to regenerate events with AI:", error)
-    },
-  })
-}
-
 // Progress Hook
 export function useProgress(
   processingSessionId: string | null,
@@ -74,7 +53,7 @@ export function useProgress(
         }
         return null
       }
-      if (process.env.NODE_ENV === "development") {
+      if (env.NODE_ENV === "development") {
         console.log("🔍 Fetching progress for session:", processingSessionId)
       }
       try {
