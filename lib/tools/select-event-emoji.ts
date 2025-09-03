@@ -47,154 +47,75 @@ export const selectEventEmojiTool = tool({
       .describe(
         "Type of event (e.g., travel, work, food, exercise, meeting, etc.)"
       ),
-    specificContext: z
+    eventTitle: z
       .string()
-      .optional()
-      .describe("Specific context about the event"),
+      .describe("The full event title or description"),
     timeOfDay: z
       .string()
       .optional()
       .describe("Time of day context (morning, afternoon, evening)"),
     location: z.string().optional().describe("Location context if relevant"),
+    peopleInvolved: z.array(z.string()).optional().describe("Names of people involved"),
   }),
-  execute: async ({ eventType, specificContext, timeOfDay, location }) => {
-    const emojiMap: Record<string, string> = {
-      // Travel & Transportation
-      travel: "🚗",
-      car: "🚗",
-      flight: "✈️",
-      plane: "✈️",
-      train: "🚂",
-      bus: "🚌",
-      bike: "🚲",
-      bicycle: "🚲",
-      walk: "🚶",
-      uber: "🚗",
-      taxi: "🚕",
+  execute: async ({ eventType, eventTitle, timeOfDay, location, peopleInvolved }) => {
+    // Pure AI-based emoji selection using generateObject for structured output
+    const emojiAnalysis = await generateObject({
+      model: aiModel,
+      schema: z.object({
+        selectedEmoji: z.string().describe("The most appropriate single emoji for this event"),
+        primaryReason: z.enum([
+          'activity_specific', 'social_context', 'location_based', 'time_sensitive', 
+          'professional', 'health_medical', 'travel_transport', 'personal_task',
+          'cultural_context', 'celebration_special'
+        ]).describe("Primary reason for emoji selection"),
+        confidence: z.number().min(0).max(1).describe("Confidence in emoji selection (0-1)"),
+        alternativeOptions: z.array(z.string()).max(3).describe("Up to 3 alternative emoji options"),
+        reasoning: z.string().describe("Brief explanation of why this emoji was chosen"),
+        contextFactors: z.object({
+          activityType: z.string().describe("What type of activity this represents"),
+          socialAspect: z.string().describe("Social context (solo, with friends, professional, etc.)"),
+          culturalRelevance: z.string().describe("Any cultural considerations (Tunisian context, local customs)")
+        })
+      }),
+      prompt: `Select the perfect emoji for this event. Consider cultural context, activity type, and visual clarity.
 
-      // Work & Professional
-      work: "♒",
-      job: "♒",
-      meeting: "👥",
-      conference: "🎤",
-      presentation: "📊",
-      jobflow: "♒",
-      office: "🏢",
-      call: "📞",
-      zoom: "💻",
+EVENT DETAILS:
+- Type: ${eventType}
+- Title: "${eventTitle}"
+- Location: ${location || 'Not specified'}
+- People: ${peopleInvolved?.join(', ') || 'Solo activity'}
+- Time: ${timeOfDay || 'Not specified'}
 
-      // Health & Fitness
-      gym: "👟",
-      workout: "👟",
-      training: "👟",
-      exercise: "👟",
-      running: "🏃",
-      jogging: "🏃",
-      swimming: "🏊‍♂️",
-      beach: "🏊‍♂️",
-      yoga: "🧘",
-      meditation: "🧘",
+CULTURAL CONTEXT:
+- User is in Tunisia (North Africa, Arabic/French culture)
+- Consider local customs and preferences
+- Transportation often involves cars
+- Social activities are important culturally
 
-      // Food & Drink
-      breakfast: "☕",
-      lunch: "🍽️",
-      dinner: "🍴",
-      coffee: "☕",
-      drink: "🍴",
-      meal: "🍽️",
-      restaurant: "🍽️",
-      cafe: "☕",
+EMOJI SELECTION PRINCIPLES:
+1. Choose the MOST recognizable and clear emoji
+2. Prioritize activity-specific emojis over generic ones
+3. Consider social vs solo context
+4. Factor in Tunisian cultural relevance
+5. Ensure emoji works well in calendar/mobile contexts
 
-      // Personal Care & Grooming
-      shower: "🚿👕",
-      bath: "🛁",
-      grooming: "🚿👕",
-      hair: "🌬️",
-      haircut: "💇",
-      care: "💆‍♂️",
-      skincare: "💆‍♂️",
+EXAMPLES:
+- Coffee with friend → ☕ (activity-specific)
+- Doctor appointment → 👩‍⚕️ (professional/health)
+- Travel to work → 🚗 (transportation)
+- Birthday party → 🎂 (celebration-specific)
+- Shopping → 🛒 (activity-specific)
 
-      // Preparation & Planning
-      pack: "🎒",
-      packing: "🎒",
-      prepare: "🎒",
-      preparation: "🎒",
-      organize: "📅",
-      planning: "📅",
-      calendar: "📅",
+Select ONE perfect emoji that best represents this event.`
+    })
 
-      // Social & Entertainment
-      birthday: "🎉",
-      party: "🎉",
-      celebration: "🎉",
-      friend: "👥",
-      date: "💕",
-      movie: "🎬",
-      gaming: "🎮",
-      music: "🎵",
-
-      // Medical & Health
-      doctor: "🏥",
-      hospital: "🏥",
-      appointment: "📅",
-      medical: "🏥",
-      dentist: "🦷",
-      checkup: "🩺",
-
-      // Education & Learning
-      study: "📚",
-      class: "📚",
-      course: "📚",
-      lesson: "📚",
-      school: "🏫",
-      university: "🎓",
-
-      // Shopping & Errands
-      shopping: "🛒",
-      groceries: "🛒",
-      errands: "📋",
-      bank: "🏦",
-      post: "📮",
-    }
-
-    const lowerType = eventType.toLowerCase()
-    const lowerContext = specificContext?.toLowerCase() || ""
-    const lowerLocation = location?.toLowerCase() || ""
-
-    // Priority matching: specific context > location > event type
-    const searchTexts = [lowerContext, lowerLocation, lowerType]
-
-    for (const searchText of searchTexts) {
-      if (searchText) {
-        for (const [key, emoji] of Object.entries(emojiMap)) {
-          if (searchText.includes(key)) {
-            return {
-              emoji,
-              reasoning: `Selected ${emoji} for ${eventType} based on "${key}" match`,
-              confidence: 0.9,
-            }
-          }
-        }
-      }
-    }
-
-    // Time-based fallbacks
-    if (
-      timeOfDay === "morning" &&
-      (lowerType.includes("routine") || lowerType.includes("start"))
-    ) {
-      return {
-        emoji: "☕",
-        reasoning: `Morning routine emoji`,
-        confidence: 0.7,
-      }
-    }
-
-    // Default fallback
     return {
-      emoji: "📅",
-      reasoning: `Default emoji for ${eventType}`,
-      confidence: 0.3,
+      emoji: emojiAnalysis.object.selectedEmoji,
+      reasoning: emojiAnalysis.object.reasoning,
+      confidence: emojiAnalysis.object.confidence,
+      primaryReason: emojiAnalysis.object.primaryReason,
+      alternatives: emojiAnalysis.object.alternativeOptions,
+      contextFactors: emojiAnalysis.object.contextFactors
     }
   },
 })

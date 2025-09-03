@@ -1,8 +1,8 @@
 "use client"
 
 import { useProgress } from "@/orpc/hooks"
-
 import { Progress } from "@/components/ui/progress"
+import { env } from "@/env"
 
 interface MainProgressBarProps {
   isVisible: boolean
@@ -20,7 +20,7 @@ export function MainProgressBar({
   } = useProgress(processingSessionId || null, isVisible)
 
   // Debug logging (only in development)
-  if (process.env.NODE_ENV === "development") {
+  if (env.NODE_ENV === "development") {
     console.log("🔄 Progress Bar Debug:", {
       isVisible,
       processingSessionId,

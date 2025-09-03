@@ -3,6 +3,7 @@
 import { orpc } from "@/orpc/client"
 import type { GenerateEventsRo } from "@/schemas/ai"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { env } from "@/env"
 
 // Import the event keys factory for cache invalidation
 import { eventKeys } from "./event"
@@ -67,7 +68,7 @@ export function useProgress(
     queryKey: aiKeys.progress(processingSessionId || ""),
     queryFn: async () => {
       if (!processingSessionId) {
-        if (process.env.NODE_ENV === "development") {
+        if (env.NODE_ENV === "development") {
           console.log("⚠️ No processing session ID provided")
         }
         return null
@@ -77,7 +78,7 @@ export function useProgress(
       }
       try {
         const result = await orpc.ai.getProgress.call({ processingSessionId })
-        if (process.env.NODE_ENV === "development") {
+        if (env.NODE_ENV === "development") {
           console.log("📊 Progress result:", result)
         }
         return result
