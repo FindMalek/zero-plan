@@ -96,38 +96,52 @@ export function MainEventCard({
       </div>
 
       {/* Event details */}
-      {(event.description || event.location) && (
-        <div className="space-y-2">
-          {event.location && (
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              📍 {event.location}
-            </p>
-          )}
-          {event.description && (
-            <div
-              className="text-sm text-slate-700 dark:text-slate-300"
-              dangerouslySetInnerHTML={{
-                __html: event.description
-                  .replace(
-                    new RegExp(
-                      `<p><strong>${event.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</strong></p>`,
-                      "gi"
-                    ),
-                    ""
-                  )
-                  .replace(
-                    new RegExp(
-                      event.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-                      "gi"
-                    ),
-                    ""
-                  )
-                  .trim(),
-              }}
-            />
-          )}
+      <div className="space-y-2">
+        {event.location && (
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            📍 {event.location}
+          </p>
+        )}
+        {event.description && (
+          <div
+            className="text-sm text-slate-700 dark:text-slate-300"
+            dangerouslySetInnerHTML={{
+              __html: event.description
+                .replace(
+                  new RegExp(
+                    `<p><strong>${event.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</strong></p>`,
+                    "gi"
+                  ),
+                  ""
+                )
+                .replace(
+                  new RegExp(
+                    event.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+                    "gi"
+                  ),
+                  ""
+                )
+                .trim(),
+            }}
+          />
+        )}
+
+        {/* Event date - bottom right */}
+        <div className="flex justify-end pt-2">
+          <span className="text-xs text-slate-500 dark:text-slate-500">
+            📅{" "}
+            {event.startTime.toLocaleDateString([], {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year:
+                event.startTime.getFullYear() !== new Date().getFullYear()
+                  ? "numeric"
+                  : undefined,
+            })}
+          </span>
         </div>
-      )}
+      </div>
     </div>
   )
 }

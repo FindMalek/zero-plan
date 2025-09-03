@@ -24,3 +24,11 @@ export const generateEventsRo = z.object({
 })
 
 export type GenerateEventsRo = z.infer<typeof generateEventsRo>
+
+export const progressRo = z.object({
+  progress: z.number(),
+  stage: z.string(),
+  status: z.string(),
+})
+
+export type ProgressRo = z.infer<typeof progressRo>

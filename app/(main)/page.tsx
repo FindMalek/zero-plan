@@ -12,8 +12,11 @@ import { MainInputSection } from "@/components/app/main-input-section"
 export default function MainPage() {
   const processEvents = useGenerateEvents()
   const [events, setEvents] = useState<EventSimpleRo[]>([])
+  const [processingSessionId, setProcessingSessionId] = useState<
+    string | undefined
+  >()
   const [eventDetails, setEventDetails] = useState(
-    "i have an appointement tmrw at the doctor, and i have to go to Gafsa from ksar Hellal this weekend and on sunday i have a birthday part of my friend ayoub at 8 pm"
+    "I have a doctor appoitement eye checkup in Ksar hellal (i live there) at 4pm and its just 15 mins go and back using the car, tomorrow i need to have a coffee with my friend Ayoub Fanter in sayeda i will be using the scooter its just 15 mins transportation to his home to pick him up and then go to a café and then after the coffee i gotta put him home again and return to my house, and the next week on monday i have to work for 4 hours in Zero Plan project at home from 4pm, but before that i need to drink my coffee"
   )
 
   const handleSend = async () => {
@@ -24,12 +27,19 @@ export default function MainPage() {
         userInput: eventDetails.trim(),
       })
 
-      if (result.success && result.events?.length) {
-        setEvents((prev) => [...prev, ...(result.events || [])])
+      if (result.success) {
+        const sessionId = result.processingSession?.id
+        setProcessingSessionId(sessionId)
+        setEvents(result.events || [])
         setEventDetails("")
+      } else {
+        console.error("Failed to process events:", result.error)
       }
     } catch (error) {
-      console.error("Failed to process event:", error)
+      console.error("Error processing events:", error)
+    } finally {
+      // Clear processing session after completion
+      setTimeout(() => setProcessingSessionId(undefined), 1000)
     }
   }
 
@@ -51,6 +61,7 @@ export default function MainPage() {
           events={events}
           isLoading={processEvents.isPending}
           showLoadingCards={3}
+          processingSessionId={processingSessionId}
         />
       </div>
     </div>
