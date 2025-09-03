@@ -69,7 +69,11 @@ export const PROGRESS_STAGES = {
     stage: "🔗 Building comprehensive event sequences...",
   },
 
-  // Finalization phase (90-100%)
+  // Finalization phase (85-100%)
+  GENERATING_STRUCTURE: {
+    progress: 85,
+    stage: "📝 Generating structured event data...",
+  },
   FINALIZING_EVENTS: {
     progress: 90,
     stage: "🎯 Finalizing events with perfect details...",
@@ -103,6 +107,15 @@ export const TOOL_PROGRESS_MAP = {
   formatTravelEvent: PROGRESS_STAGES.PLANNING_TRAVEL,
   analyzeEventComplexity: PROGRESS_STAGES.ANALYZING_INTENT,
   extractLocationContext: PROGRESS_STAGES.ANALYZING_INTENT,
+} as const
+
+/**
+ * Progress stages for the new chained AI approach
+ */
+export const CHAINED_PROGRESS = {
+  TOOL_PHASE: "Tool execution and planning phase",
+  STRUCTURE_PHASE: "Structured output generation phase",
+  FINALIZATION_PHASE: "Database storage and completion phase",
 } as const
 
 /**

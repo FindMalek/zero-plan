@@ -94,8 +94,8 @@ export const generateEvents = baseProcedure
       })
 
       try {
-        // Use generateText with tools for enhanced context and formatting
-        const result = await generateText({
+        // Step 1: Use generateText with tools for intelligent planning and data gathering
+        const textResult = await generateText({
           model: aiModel,
           tools: {
             getCurrentTimeInfo: getCurrentTimeInfoTool,
@@ -215,58 +215,117 @@ Progress tracking:
 - "🎯 Finalizing events with perfect details..." (90%)
 - "✨ Completing your personalized event plan..." (95%)
 
-STEP 6: FINAL STRUCTURED OUTPUT
-Provide complete JSON with ALL events in chronological order:
+STEP 6: FINAL ANALYSIS AND SUMMARY
+After using all necessary tools, provide a comprehensive summary of your planning work:
 
+- Summarize your intent analysis findings
+- List all events you've planned and their key details
+- Describe the travel logistics and timing coordination
+- Explain any cultural considerations applied
+- Note the confidence level in your planning
+
+Focus on thorough tool usage rather than structured output - the system will capture all tool results and generate the final structured events separately.
+
+🚀 EXECUTION PRIORITY: Always start with analyzeUserIntent and planEventStructure tools for intelligent, comprehensive event planning that serves the user's real needs.`,
+        })
+
+        // Update progress: Generating structured output
+        await updateProgress(
+          processingSession.id,
+          PROGRESS_STAGES.GENERATING_STRUCTURE.progress,
+          PROGRESS_STAGES.GENERATING_STRUCTURE.stage
+        )
+
+        // Step 2: Generate structured output based on tool results and analysis
+        const contextInfo = {
+          userInput: input.userInput,
+          calendarName: activeCalendar.name,
+          planningText: textResult.text,
+          toolResults: textResult.toolResults || [],
+        }
+
+        const structuredResult = await generateText({
+          model: aiModel,
+          prompt: `Based on the comprehensive AI planning analysis, generate structured events for the user.
+
+ORIGINAL USER REQUEST: "${contextInfo.userInput}"
+CALENDAR: "${contextInfo.calendarName}"
+
+AI PLANNING ANALYSIS:
+${contextInfo.planningText}
+
+TOOL RESULTS SUMMARY:
+${contextInfo.toolResults.map((result, i) => `${i + 1}. ${result.toolName}: ${JSON.stringify(result.output)}`).join("\n")}
+
+Generate a comprehensive event structure that includes:
+
+1. ALL planned events in chronological order (travel, main events, return travel)
+2. Rich, contextual descriptions with helpful details
+3. Proper timing coordination and realistic durations
+4. Appropriate emojis and location information
+5. Cultural considerations for Tunisian context
+
+Requirements:
+- Use ISO 8601 format for all dates/times
+- Include confidence scores based on information clarity
+- Ensure travel events connect logically with main events
+- Apply 10-15 minute buffer times for travel uncertainties
+- Use appropriate timezone (UTC as default)
+
+Create events that serve the user's complete journey, not just the main activity.
+
+IMPORTANT: Return ONLY a valid JSON object with this exact structure:
 {
   "events": [
     {
       "emoji": "🚗",
-      "title": "🚗 Car (Ksar Hellal → Sayeda)",
+      "title": "Car (Ksar Hellal → Sayeda)",
       "description": "<p>Travel details with timing, route, and helpful tips</p>",
       "startTime": "2024-12-21T14:30:00.000Z",
-      "endTime": "2024-12-21T14:45:00.000Z", 
+      "endTime": "2024-12-21T14:45:00.000Z",
       "timezone": "UTC",
       "isAllDay": false,
       "location": "Ksar Hellal to Sayeda",
       "confidence": 0.8
     }
   ],
-  "processingNotes": "Master planning analysis: [brief summary of intent and strategy]",
+  "processingNotes": "Master planning analysis: brief summary of intent and strategy",
   "confidence": 0.85,
   "contextUsed": ["intent_analysis", "event_structure", "travel_optimization"]
 }
 
-🚀 EXECUTION PRIORITY: Always start with analyzeUserIntent and planEventStructure tools for intelligent, comprehensive event planning that serves the user's real needs.`,
+Return only the JSON object, no additional text.`,
         })
 
-        // Update progress: Finalizing
-        await updateProgress(
-          processingSession.id,
-          PROGRESS_STAGES.FINALIZING_EVENTS.progress,
-          PROGRESS_STAGES.FINALIZING_EVENTS.stage
-        )
-
-        // Parse the final text response as JSON for the structured data
-        const finalMessage = result.text
+        // Parse the JSON response
         let aiResponse: AiEventGenerationSchema
-
         try {
-          // Try to extract JSON from the response
-          const jsonMatch = finalMessage.match(/\{[\s\S]*\}/)
+          const jsonMatch = structuredResult.text.match(/\{[\s\S]*\}/)
           if (jsonMatch) {
             aiResponse = JSON.parse(jsonMatch[0])
           } else {
             throw new Error("No JSON found in response")
           }
         } catch (error) {
-          // Fallback: create a basic response if JSON parsing fails
-          console.error("Failed to parse AI response as JSON:", error)
+          console.error("Failed to parse structured AI response:", error)
+          console.error("Raw response:", structuredResult.text)
+
+          // Fallback: create a basic response
           aiResponse = {
             events: [],
-            processingNotes: "Failed to parse AI response",
+            processingNotes:
+              "Failed to parse AI response for structured output",
             confidence: 0.1,
           }
+        }
+
+        // Validate that we got a proper response
+        if (
+          !aiResponse ||
+          !aiResponse.events ||
+          aiResponse.events.length === 0
+        ) {
+          throw new Error("AI failed to generate valid events")
         }
 
         const processingTimeMs = Date.now() - startTime

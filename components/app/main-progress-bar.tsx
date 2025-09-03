@@ -2,8 +2,6 @@
 
 import { useProgress } from "@/orpc/hooks"
 
-import { env } from "@/env"
-
 import { Progress } from "@/components/ui/progress"
 
 interface MainProgressBarProps {
@@ -15,22 +13,10 @@ export function MainProgressBar({
   isVisible,
   processingSessionId,
 }: MainProgressBarProps) {
-  const {
-    data: progressData,
-    isLoading,
-    error,
-  } = useProgress(processingSessionId || null, isVisible)
-
-  // Debug logging (only in development)
-  if (env.NODE_ENV === "development") {
-    console.log("🔄 Progress Bar Debug:", {
-      isVisible,
-      processingSessionId,
-      progressData,
-      isLoading,
-      error,
-    })
-  }
+  const { data: progressData } = useProgress(
+    processingSessionId || null,
+    isVisible
+  )
 
   if (!isVisible) return null
 

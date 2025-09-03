@@ -4,8 +4,6 @@ import { useState } from "react"
 import { useGenerateEvents } from "@/orpc/hooks"
 import { EventSimpleRo } from "@/schemas"
 
-import { env } from "@/env"
-
 import { MainBackground } from "@/components/app/main-background"
 import { MainEventsSection } from "@/components/app/main-events-section"
 import { MainHeader } from "@/components/app/main-header"
@@ -31,9 +29,6 @@ export default function MainPage() {
 
       if (result.success) {
         const sessionId = result.processingSession?.id
-        if (env.NODE_ENV === "development") {
-          console.log("✅ Generation successful, session ID:", sessionId)
-        }
         setProcessingSessionId(sessionId)
         setEvents(result.events || [])
         setEventDetails("")

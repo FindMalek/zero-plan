@@ -1,16 +1,23 @@
 import { z } from "zod"
 
-import { createEventDto } from "../event"
 import { timezoneSchema } from "../utils"
 
 // =============================================================================
 // AI EVENT ENTITY SCHEMAS
 // =============================================================================
 
-// AI Event Schema - extends existing createEventDto
-export const aiEventSchema = createEventDto
-  .omit({ calendarId: true }) // We'll handle calendar separately
-  .extend({
+// AI Event Schema - clean schema without Date types for JSON Schema compatibility
+export const aiEventSchema = z
+  .object({
+    emoji: z.string().min(1, "Emoji is required").optional(),
+    title: z
+      .string()
+      .min(1, "Title is required")
+      .max(200, "Title must be less than 200 characters"),
+    description: z
+      .string()
+      .max(1000, "Description must be less than 1000 characters")
+      .optional(),
     startTime: z.string().describe("ISO 8601 start date/time for the event"),
     endTime: z
       .string()
@@ -21,6 +28,13 @@ export const aiEventSchema = createEventDto
       .describe(
         "Timezone for the event - must be one of: UTC, AMERICA_NEW_YORK, AMERICA_CHICAGO, AMERICA_DENVER, AMERICA_LOS_ANGELES, EUROPE_LONDON, EUROPE_PARIS, EUROPE_BERLIN, ASIA_TOKYO, ASIA_SINGAPORE, ASIA_DUBAI, AUSTRALIA_SYDNEY"
       ),
+    isAllDay: z.boolean().optional(),
+    location: z
+      .string()
+      .max(500, "Location must be less than 500 characters")
+      .optional(),
+    maxParticipants: z.number().int().positive().optional(),
+    links: z.array(z.string().url()).optional(),
     confidence: z
       .number()
       .min(0)
