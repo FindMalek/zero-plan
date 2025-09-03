@@ -1,13 +1,43 @@
 import { tool } from "ai"
 import { z } from "zod"
+import { generateObject } from "ai"
+import { aiModel } from "@/config/openai" 
+import { env } from "@/env"
 import { 
   getUserContext, 
-  getDefaultLocation, 
-  requiresTravel 
+  getDefaultLocation
 } from "@/config/user-context"
+import { PROGRESS_STAGES, type ProgressContext } from "@/lib/utils/progress-helper"
 
 /**
- * Master event planner tool - analyzes user input holistically and creates structured event strategy
+ * Master Event Planner - User Intent Analysis Tool
+ * 
+ * This is the "brain" of the event planning system. It performs comprehensive
+ * analysis of user input to understand intent, identify all activities, and
+ * create intelligent planning strategies.
+ * 
+ * Key Features:
+ * - AI-powered natural language understanding
+ * - Multi-event detection and segmentation
+ * - Temporal pattern recognition (tomorrow, next week, 3pm)
+ * - Location and travel context extraction
+ * - Strategic planning recommendations
+ * 
+ * Analysis Process:
+ * 1. Parse temporal markers (today, tomorrow, specific times)
+ * 2. Identify activity types (social, work, appointments)
+ * 3. Extract location context and travel implications
+ * 4. Segment input into distinct events
+ * 5. Generate strategic planning approach
+ * 
+ * @example
+ * ```typescript
+ * const analysis = await analyzeUserIntentTool.execute({
+ *   userInput: "Coffee with Iheb tomorrow at 3pm in Sayeda",
+ *   currentDateTime: "2024-12-21T10:00:00.000Z"
+ * });
+ * // Returns: { userIntent: { primaryActivity: "social", complexity: "simple" }, ... }
+ * ```
  */
 export const analyzeUserIntentTool = tool({
   description: "Comprehensively analyze user input to understand intent, identify all events, and create a structured planning strategy",
@@ -15,172 +45,83 @@ export const analyzeUserIntentTool = tool({
     userInput: z.string().describe("The complete user input to analyze"),
     currentDateTime: z.string().describe("Current date/time for context"),
   }),
-  execute: async ({ userInput }) => {
+  execute: async ({ userInput, currentDateTime }) => {
     const userContext = getUserContext()
     const homeLocation = getDefaultLocation(userContext)
     
-    // Parse input for temporal markers
-    const temporalMarkers = {
-      today: /today|this (morning|afternoon|evening)/gi,
-      tomorrow: /tomorrow|tmrw/gi,
-      thisWeek: /this (week|weekend|saturday|sunday|monday|tuesday|wednesday|thursday|friday)/gi,
-      nextWeek: /next (week|weekend|saturday|sunday|monday|tuesday|wednesday|thursday|friday)/gi,
-      specificTime: /(\d{1,2})(:\d{2})?\s*(am|pm|h)/gi,
-      specificDate: /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/gi
-    }
+    // Pure AI-based intent analysis using generateObject for structured output
+    const aiAnalysis = await generateObject({
+      model: aiModel,
+      schema: z.object({
+        userIntent: z.object({
+          primaryActivity: z.string().describe("The main type of activity (social, work, appointment, travel, personal, etc.)"),
+          complexity: z.enum(['simple', 'complex']).describe("Simple = single activity, Complex = multiple activities or complex logistics"),
+          timeframe: z.string().describe("When this should happen (today, tomorrow, this_week, next_week, unspecified)"),
+          hasExplicitTiming: z.boolean().describe("Whether specific times are mentioned (3pm, morning, etc.)")
+        }),
+        identifiedEvents: z.array(z.object({
+          segment: z.string().describe("The text segment describing this event"),
+          type: z.string().describe("Event type: social, work, appointment, travel, personal, preparation"),
+          requiresTravel: z.boolean().describe("Whether this event requires travel from home"),
+          location: z.string().nullable().describe("Specific location mentioned, null if none"),
+          temporalClues: z.array(z.string()).describe("Time-related words found in this segment"),
+          peopleInvolved: z.array(z.string()).describe("Names of people mentioned"),
+          estimatedDuration: z.number().describe("Estimated duration in minutes based on activity type")
+        })),
+        planningStrategy: z.object({
+          approach: z.string().describe("Planning approach: simple, travel_required, or multi_event_complex"),
+          estimatedTotalEvents: z.number().describe("Total number of events that should be created"),
+          needsTravelPlanning: z.boolean().describe("Whether travel events need to be created"),
+          needsTimeCoordination: z.boolean().describe("Whether multiple events need time coordination"),
+          baseLocation: z.string().describe("User's home/base location")
+        }),
+        contextualFactors: z.object({
+          multipleLocations: z.boolean().describe("Whether multiple different locations are mentioned"),
+          hasPersonNames: z.boolean().describe("Whether specific people's names are mentioned"),
+          hasUrgency: z.boolean().describe("Whether urgent language is used"),
+          hasPreferences: z.boolean().describe("Whether preferences or specific requirements are mentioned"),
+          culturalContext: z.array(z.string()).describe("Any cultural or local context clues (Tunisian cities, local customs, etc.)")
+        }),
+        recommendations: z.object({
+          shouldCreateMultipleEvents: z.boolean(),
+          shouldIncludeTravel: z.boolean(),
+          shouldCoordinateTiming: z.boolean(),
+          suggestedProcessingOrder: z.array(z.object({
+            order: z.number(),
+            event: z.string(),
+            type: z.string(),
+            priority: z.enum(['high', 'medium', 'low'])
+          }))
+        }),
+        confidence: z.number().min(0).max(1).describe("Overall confidence in the analysis"),
+        processingNotes: z.string().describe("Brief notes about what was identified and the approach taken")
+      }),
+      prompt: `You are an expert event planning AI. Analyze this user request comprehensively:
+
+USER INPUT: "${userInput}"
+CURRENT TIME: ${currentDateTime}
+USER'S HOME: ${homeLocation.name}
+USER CONTEXT: Lives in Tunisia, uses car as primary transport, prefers 10min travel buffers
+
+ANALYSIS REQUIREMENTS:
+1. Identify ALL distinct activities/events mentioned
+2. Extract people's names (especially Arabic/French names common in Tunisia)
+3. Identify locations (prioritize Tunisian cities: Tunis, Sousse, Monastir, Gafsa, Sfax, Ksar Hellal, Sayeda, Mahdia)
+4. Parse time references (tomorrow, 3pm, next week, morning, etc.)
+5. Determine activity types and travel requirements
+6. Assess complexity and create planning strategy
+
+CONTEXT AWARENESS:
+- Consider Tunisian culture and geography
+- Assume travel is needed for activities outside home
+- Account for typical event durations
+- Factor in social vs professional contexts
+- Consider time-of-day implications
+
+Provide a comprehensive structured analysis that will drive intelligent event creation.`
+    })
     
-    // Parse input for activity markers
-    const activityMarkers = {
-      appointments: /appointment|doctor|dentist|meeting|interview/gi,
-      social: /coffee|lunch|dinner|party|birthday|celebration|visit|friend/gi,
-      travel: /go to|travel to|drive to|visit|from .+ to/gi,
-      work: /work|office|job|project|presentation|call|zoom/gi,
-      personal: /shower|gym|workout|shopping|groceries|errands/gi,
-      preparation: /prepare|pack|get ready|organize/gi
-    }
-    
-    // Parse input for location markers
-    const locationMarkers = {
-      explicit: /at |in |to |from /gi,
-      cities: /(tunis|sousse|monastir|gafsa|sfax|ksar hellal|sayeda|mahdia)/gi,
-      venues: /(restaurant|cafe|hospital|office|gym|home|work)/gi
-    }
-    
-    // Analyze the input
-    const analysis = {
-      temporalContext: {
-        hasToday: temporalMarkers.today.test(userInput),
-        hasTomorrow: temporalMarkers.tomorrow.test(userInput),
-        hasThisWeek: temporalMarkers.thisWeek.test(userInput),
-        hasNextWeek: temporalMarkers.nextWeek.test(userInput),
-        specificTimes: [...userInput.matchAll(temporalMarkers.specificTime)].map(m => m[0]),
-        specificDates: [...userInput.matchAll(temporalMarkers.specificDate)].map(m => m[0])
-      },
-      
-      activityContext: {
-        appointments: [...userInput.matchAll(activityMarkers.appointments)].map(m => m[0]),
-        social: [...userInput.matchAll(activityMarkers.social)].map(m => m[0]),
-        travel: [...userInput.matchAll(activityMarkers.travel)].map(m => m[0]),
-        work: [...userInput.matchAll(activityMarkers.work)].map(m => m[0]),
-        personal: [...userInput.matchAll(activityMarkers.personal)].map(m => m[0]),
-        preparation: [...userInput.matchAll(activityMarkers.preparation)].map(m => m[0])
-      },
-      
-      locationContext: {
-        mentionedCities: [...userInput.matchAll(locationMarkers.cities)].map(m => m[0]),
-        mentionedVenues: [...userInput.matchAll(locationMarkers.venues)].map(m => m[0]),
-        hasLocationIndicators: locationMarkers.explicit.test(userInput)
-      }
-    }
-    
-    // Identify distinct events from the input
-    const events = []
-    
-    // Split input by common conjunctions to find multiple events
-    const segments = userInput.split(/,|\sand\s|\sthen\s|\safter\s|\sbefore\s/i)
-    
-    for (const segment of segments) {
-      const trimmedSegment = segment.trim()
-      if (trimmedSegment.length < 3) continue
-      
-      // Determine event type
-      let eventType = 'general'
-      let requiresTravelLogic = false
-      
-      if (activityMarkers.appointments.test(trimmedSegment)) {
-        eventType = 'appointment'
-        requiresTravelLogic = true
-      } else if (activityMarkers.social.test(trimmedSegment)) {
-        eventType = 'social'
-        requiresTravelLogic = true
-      } else if (activityMarkers.travel.test(trimmedSegment)) {
-        eventType = 'travel'
-        requiresTravelLogic = false // Travel is explicit
-      } else if (activityMarkers.work.test(trimmedSegment)) {
-        eventType = 'work'
-        requiresTravelLogic = true
-      } else if (activityMarkers.personal.test(trimmedSegment)) {
-        eventType = 'personal'
-        requiresTravelLogic = requiresTravel(trimmedSegment)
-      } else if (activityMarkers.preparation.test(trimmedSegment)) {
-        eventType = 'preparation'
-        requiresTravelLogic = false
-      }
-      
-      // Extract location if mentioned
-      let eventLocation = null
-      if (analysis.locationContext.mentionedCities.length > 0) {
-        eventLocation = analysis.locationContext.mentionedCities[0]
-      } else if (analysis.locationContext.mentionedVenues.length > 0) {
-        eventLocation = analysis.locationContext.mentionedVenues[0]
-      }
-      
-      events.push({
-        segment: trimmedSegment,
-        type: eventType,
-        requiresTravel: requiresTravelLogic,
-        location: eventLocation,
-        temporalClues: analysis.temporalContext.specificTimes.filter(time => 
-          trimmedSegment.toLowerCase().includes(time.toLowerCase())
-        )
-      })
-    }
-    
-    // Create planning strategy
-    let strategy = 'simple'
-    let totalEventsEstimate = events.length
-    
-    if (events.some(e => e.requiresTravel)) {
-      strategy = 'travel_required'
-      totalEventsEstimate = events.filter(e => e.requiresTravel).length * 3 + 
-                           events.filter(e => !e.requiresTravel).length
-    }
-    
-    if (events.length > 2 || analysis.locationContext.mentionedCities.length > 1) {
-      strategy = 'multi_event_complex'
-      totalEventsEstimate = Math.max(totalEventsEstimate, events.length * 2)
-    }
-    
-    return {
-      userIntent: {
-        primaryActivity: events[0]?.type || 'general',
-        complexity: events.length > 1 ? 'complex' : 'simple',
-        timeframe: analysis.temporalContext.hasTomorrow ? 'tomorrow' :
-                  analysis.temporalContext.hasToday ? 'today' :
-                  analysis.temporalContext.hasThisWeek ? 'this_week' : 'unspecified',
-        hasExplicitTiming: analysis.temporalContext.specificTimes.length > 0
-      },
-      
-      identifiedEvents: events,
-      
-      planningStrategy: {
-        approach: strategy,
-        estimatedTotalEvents: totalEventsEstimate,
-        needsTravelPlanning: events.some(e => e.requiresTravel),
-        needsTimeCoordination: events.length > 1,
-        baseLocation: homeLocation.name
-      },
-      
-      contextualFactors: {
-        multipleLocations: analysis.locationContext.mentionedCities.length > 1,
-        hasPersonNames: /[A-Z][a-z]+ [A-Z][a-z]+|friend \w+|\w+ friend/gi.test(userInput),
-        hasUrgency: /urgent|asap|now|immediately/gi.test(userInput),
-        hasPreferences: /prefer|like|want|need/gi.test(userInput)
-      },
-      
-      recommendations: {
-        shouldCreateMultipleEvents: totalEventsEstimate > 1,
-        shouldIncludeTravel: events.some(e => e.requiresTravel),
-        shouldCoordinateTiming: events.length > 1 && analysis.temporalContext.specificTimes.length > 0,
-        suggestedProcessingOrder: events.map((e, i) => ({
-          order: i + 1,
-          event: e.segment,
-          type: e.type
-        }))
-      },
-      
-      confidence: events.length > 0 ? 0.9 : 0.6,
-      processingNotes: `Identified ${events.length} distinct activities with ${strategy} strategy`
-    }
+    // Return the pure AI analysis result
+    return aiAnalysis.object
   },
 })

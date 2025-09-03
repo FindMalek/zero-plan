@@ -140,31 +140,41 @@ CONTEXT:
 - Calendar: "${activeCalendar.name}" 
 - USER INPUT: "${input.userInput}"
 
-🧠 MASTER PLANNING WORKFLOW:
+🧠 MASTER PLANNING WORKFLOW WITH PROGRESS TRACKING:
 
-STEP 1: ANALYZE USER INTENT (REQUIRED FIRST STEP)
+STEP 1: ANALYZE USER INTENT (20% - REQUIRED FIRST STEP)
 Use analyzeUserIntent tool with current datetime to understand:
 - What activities the user really wants to do
 - How complex their request is 
 - What locations and timing are involved
 - The complete scope of their needs
+Progress: "🧠 Analyzing your request and understanding intent..."
 
-STEP 2: PLAN EVENT STRUCTURE (REQUIRED SECOND STEP) 
+STEP 2: GET TIME CONTEXT (40%)
+Use getCurrentTimeInfo tool for accurate datetime context
+Progress: "⏰ Getting current time and scheduling context..."
+
+STEP 3: PLAN EVENT STRUCTURE (35% - REQUIRED AFTER STEP 1) 
 Use planEventStructure tool with the intent analysis to:
 - Create detailed event breakdown and timing
 - Account for travel, preparation, and logistics
 - Coordinate multiple activities if needed
 - Optimize the complete event flow
+Progress: "📋 Planning optimal event structure and flow..."
 
-STEP 3: GET TIME CONTEXT
-Use getCurrentTimeInfo tool for accurate datetime context
+STEP 4: GENERATE INDIVIDUAL EVENTS (50-80%)
+For each structured event from Step 3:
+- Use selectEventEmoji for appropriate emoji (50%)
+- Use calculateEventTiming for optimal scheduling (55%)
+- Use planTravelEvents for travel logistics (60%)
+- Use generateEventDescription for rich, contextual content (70%)
+- Use formatTravelEvent for travel events when needed
 
-STEP 4: GENERATE INDIVIDUAL EVENTS
-For each structured event from Step 2:
-- Use selectEventEmoji for appropriate emoji
-- Use generateEventDescription for rich, contextual content  
-- Use formatTravelEvent for travel events
-- Use calculateEventTiming for optimal scheduling
+Progress tracking:
+- "😊 Selecting perfect emojis for your events..." (50%)
+- "⌚ Calculating optimal timing and durations..." (55%)
+- "🚗 Planning travel routes and logistics..." (60%)
+- "✍️ Crafting detailed event descriptions with AI..." (70%)
 
 🎯 INTELLIGENT EVENT CREATION STRATEGY:
 
@@ -197,7 +207,17 @@ For each structured event from Step 2:
 - Use local knowledge (Tunisian cities/culture)
 - Provide rich, actionable event descriptions
 
-STEP 5: FINAL STRUCTURED OUTPUT
+STEP 5: FINALIZE EVENT SEQUENCE (80-95%)
+- Use generateEventSequence to build comprehensive event chains (80%)
+- Apply final formatting and quality checks (90%)
+- Complete personalized event plan (95%)
+
+Progress tracking:
+- "🔗 Building comprehensive event sequences..." (80%)
+- "🎯 Finalizing events with perfect details..." (90%)
+- "✨ Completing your personalized event plan..." (95%)
+
+STEP 6: FINAL STRUCTURED OUTPUT
 Provide complete JSON with ALL events in chronological order:
 
 {

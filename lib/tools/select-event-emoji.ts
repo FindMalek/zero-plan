@@ -1,7 +1,43 @@
 import { tool } from "ai"
 import { z } from "zod"
+import { generateObject } from "ai"
+import { aiModel } from "@/config/openai"
+import { PROGRESS_STAGES, type ProgressContext } from "@/lib/utils/progress-helper"
 
-// Smart emoji selection tool
+/**
+ * Smart Emoji Selection Tool
+ * 
+ * Intelligently selects appropriate emojis for events based on type, context,
+ * and user patterns. Uses pattern matching and contextual analysis to find
+ * the perfect emoji that represents the event's nature.
+ * 
+ * Key Features:
+ * - Comprehensive emoji mapping for different event types
+ * - Context-aware selection (location, time of day, specific activities)
+ * - Priority-based matching (context > location > event type)
+ * - Time-based fallbacks for routine activities
+ * - Confidence scoring for selection quality
+ * 
+ * Event Categories:
+ * - Travel & Transportation (🚗, 🚲, ✈️, 🚶)
+ * - Work & Professional (♒, 👥, 📊, 💻)
+ * - Health & Fitness (👟, 🏃, 🧘, 🏊‍♂️)
+ * - Food & Drink (☕, 🍽️, 🍴)
+ * - Social & Entertainment (🎉, 👥, 🎬, 💕)
+ * - Medical & Health (🏥, 🩺, 🦷)
+ * - And many more...
+ * 
+ * @example
+ * ```typescript
+ * const emoji = await selectEventEmojiTool.execute({
+ *   eventType: "coffee",
+ *   specificContext: "meeting with friend",
+ *   timeOfDay: "morning",
+ *   location: "cafe"
+ * });
+ * // Returns: { emoji: "☕", reasoning: "Selected ☕ for coffee based on...", confidence: 0.9 }
+ * ```
+ */
 export const selectEventEmojiTool = tool({
   description:
     "Intelligently select appropriate emoji for events based on type, context, and user patterns",

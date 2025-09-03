@@ -1,7 +1,43 @@
 import { tool } from "ai"
 import { z } from "zod"
+import { generateText } from "ai"
+import { aiModel } from "@/config/openai"
+import { env } from "@/env"
+import { PROGRESS_STAGES, type ProgressContext } from "@/lib/utils/progress-helper"
 
-// Rich description generation tool
+/**
+ * AI-Powered Event Description Generator
+ * 
+ * Creates rich, contextual HTML descriptions with task lists, schedules, and
+ * detailed context for events. Uses both template-based generation and AI
+ * enhancement for optimal results.
+ * 
+ * Key Features:
+ * - AI-enhanced content generation for complex events
+ * - Template-based descriptions for common event types
+ * - Rich HTML formatting with task lists and schedules
+ * - Context-aware content based on event type and timing
+ * - Personalized recommendations and tips
+ * 
+ * Content Types:
+ * - Morning routines with motivational content
+ * - Work sessions with productivity focus
+ * - Travel events with logistics and tips
+ * - Social events with preparation checklists
+ * - Appointments with arrival and document guidance
+ * 
+ * @example
+ * ```typescript
+ * const description = await generateEventDescriptionTool.execute({
+ *   eventType: "coffee",
+ *   eventTitle: "☕ Coffee (Iheb)",
+ *   context: "Meeting with friend to discuss project",
+ *   timeOfDay: "afternoon",
+ *   duration: 60
+ * });
+ * // Returns: { description: "<p>Coffee meeting details...</p>", template: "social", confidence: 0.9 }
+ * ```
+ */
 export const generateEventDescriptionTool = tool({
   description:
     "Generate rich HTML descriptions with task lists, schedules, and detailed context for events",
@@ -27,6 +63,59 @@ export const generateEventDescriptionTool = tool({
     duration,
     includeTaskList,
   }) => {
+    
+    // Try AI-enhanced description for complex events with rich context
+    if (context && context.length > 10 && !eventType.includes('travel')) {
+      try {
+        const aiDescription = await generateText({
+          model: aiModel,
+          prompt: `Create a rich HTML description for this event:
+
+EVENT: ${eventTitle}
+TYPE: ${eventType}
+CONTEXT: ${context}
+TIME OF DAY: ${timeOfDay || 'unspecified'}
+DURATION: ${duration ? `${duration} minutes` : 'unspecified'}
+
+Create an engaging HTML description that includes:
+1. A brief overview of the event
+2. A practical task list or preparation checklist (if relevant)
+3. Helpful tips or recommendations
+4. Motivational or contextual closing
+
+Format as clean HTML with <p>, <ul>, <li>, <strong>, <em> tags.
+Keep it concise but informative.
+Make it personal and actionable.
+
+Example format:
+<p>Brief overview of what this event is about...</p>
+<ul>
+  <li>Practical task 1</li>
+  <li>Practical task 2</li>
+</ul>
+<p>Helpful tip or motivational message.</p>`
+        })
+
+        // Extract and clean the HTML
+        const cleanedDescription = aiDescription.text
+          .replace(/```html\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim()
+        
+        if (cleanedDescription && cleanedDescription.includes('<')) {
+          return {
+            description: cleanedDescription,
+            template: "ai_generated",
+            confidence: 0.9,
+          }
+        }
+      } catch (error) {
+        if (env.NODE_ENV === 'development') {
+          console.log("AI description generation failed, using templates:", error)
+        }
+        // Fall through to template-based generation
+      }
+    }
     const descriptionTemplates: Record<
       string,
       (title: string, ctx?: string, time?: string, dur?: number) => string
