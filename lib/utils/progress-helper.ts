@@ -3,6 +3,7 @@ import { database } from "@/prisma/client"
 /**
  * Helper function to update progress during AI tool execution
  * Provides real-time feedback to users about the current processing stage
+ * Enhanced for streaming with better error handling and validation
  */
 export async function updateProgress(
   processingSessionId: string,
@@ -10,16 +11,104 @@ export async function updateProgress(
   stage: string
 ): Promise<void> {
   try {
+    // Validate inputs
+    if (!processingSessionId) {
+      console.warn("Progress update called without processing session ID")
+      return
+    }
+
+    // Ensure progress is within valid range
+    const validProgress = Math.max(0, Math.min(100, progress))
+
+    // Add timestamp for better tracking
+    const timestamp = new Date().toISOString()
+
     await database.inputProcessingSession.update({
       where: { id: processingSessionId },
       data: {
-        processedOutput: { progress, stage },
+        processedOutput: {
+          progress: validProgress,
+          stage,
+          timestamp,
+          lastUpdated: timestamp,
+        },
       },
     })
+
+    // Log for development
+    if (process.env.NODE_ENV === "development") {
+      console.log(`📊 Progress updated: ${validProgress}% - ${stage}`)
+    }
   } catch (error) {
-    // Silently fail to avoid breaking the main flow
-    console.error("Failed to update progress:", error)
+    // Enhanced error logging for debugging
+    console.error("Failed to update progress:", {
+      processingSessionId,
+      progress,
+      stage,
+      error: error instanceof Error ? error.message : error,
+    })
   }
+}
+
+// Global progress tracker to ensure sequential updates
+const progressTracker = new Map<
+  string,
+  { progress: number; lastUpdate: number }
+>()
+
+/**
+ * Enhanced progress update with automatic stage detection based on tool calls
+ * Now includes progress sequence management to prevent backwards movement
+ */
+export async function updateProgressFromTool(
+  processingSessionId: string,
+  toolName: string,
+  additionalContext?: string
+): Promise<void> {
+  const progressStage =
+    TOOL_PROGRESS_MAP[toolName as keyof typeof TOOL_PROGRESS_MAP]
+
+  if (progressStage) {
+    // Get current progress tracker for this session
+    const currentTracker = progressTracker.get(processingSessionId) || {
+      progress: 0,
+      lastUpdate: 0,
+    }
+
+    // Only update if this progress is higher than current (prevent backwards movement)
+    if (progressStage.progress > currentTracker.progress) {
+      const enhancedStage = additionalContext
+        ? `${progressStage.stage} ${additionalContext}`
+        : progressStage.stage
+
+      await updateProgress(
+        processingSessionId,
+        progressStage.progress,
+        enhancedStage
+      )
+
+      // Update tracker
+      progressTracker.set(processingSessionId, {
+        progress: progressStage.progress,
+        lastUpdate: Date.now(),
+      })
+    } else {
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          `⚠️ Skipping backwards progress: ${progressStage.progress}% (current: ${currentTracker.progress}%) for tool: ${toolName}`
+        )
+      }
+    }
+  } else {
+    console.warn(`Unknown tool for progress tracking: ${toolName}`)
+  }
+}
+
+/**
+ * Clean up progress tracker when session completes
+ */
+export function cleanupProgressTracker(processingSessionId: string): void {
+  progressTracker.delete(processingSessionId)
 }
 
 /**

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useGenerateEvents } from "@/orpc/hooks"
+import { useInitiateEventGeneration } from "@/orpc/hooks"
 import { EventSimpleRo } from "@/schemas"
 
 import { MainBackground } from "@/components/app/main-background"
@@ -10,7 +10,7 @@ import { MainHeader } from "@/components/app/main-header"
 import { MainInputSection } from "@/components/app/main-input-section"
 
 export default function MainPage() {
-  const processEvents = useGenerateEvents()
+  const initiateEvents = useInitiateEventGeneration()
   const [events, setEvents] = useState<EventSimpleRo[]>([])
   const [processingSessionId, setProcessingSessionId] = useState<
     string | undefined
@@ -22,24 +22,32 @@ export default function MainPage() {
   const handleSend = async () => {
     if (!eventDetails.trim()) return
 
+    // Clear previous state
+    setEvents([])
+    setProcessingSessionId(undefined)
+
     try {
-      const result = await processEvents.mutateAsync({
+      // Step 1: Initiate event generation and get session ID immediately
+      const result = await initiateEvents.mutateAsync({
         userInput: eventDetails.trim(),
       })
 
-      if (result.success) {
-        const sessionId = result.processingSession?.id
-        setProcessingSessionId(sessionId)
-        setEvents(result.events || [])
+      if (result.success && result.processingSessionId) {
+        console.log(
+          "🚀 Event generation initiated, session ID:",
+          result.processingSessionId
+        )
+        setProcessingSessionId(result.processingSessionId)
         setEventDetails("")
+
+        // Note: The actual AI processing happens in the background
+        // Progress will be tracked via the streaming progress hook
+        // Events will be available when the processing completes
       } else {
-        console.error("Failed to process events:", result.error)
+        console.error("Failed to initiate event generation:", result.error)
       }
     } catch (error) {
-      console.error("Error processing events:", error)
-    } finally {
-      // Clear processing session after completion
-      setTimeout(() => setProcessingSessionId(undefined), 1000)
+      console.error("Error initiating event generation:", error)
     }
   }
 
@@ -54,12 +62,12 @@ export default function MainPage() {
           eventDetails={eventDetails}
           setEventDetails={setEventDetails}
           onSend={handleSend}
-          isPending={processEvents.isPending}
+          isPending={initiateEvents.isPending}
         />
 
         <MainEventsSection
           events={events}
-          isLoading={processEvents.isPending}
+          isLoading={initiateEvents.isPending || !!processingSessionId}
           showLoadingCards={3}
           processingSessionId={processingSessionId}
         />
