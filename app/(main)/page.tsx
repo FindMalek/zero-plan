@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useGenerateEvents } from "@/orpc/hooks"
+import { orpc } from "@/orpc/client"
+import { useInitiateEventGeneration } from "@/orpc/hooks"
 import { EventSimpleRo } from "@/schemas"
 
 import { MainBackground } from "@/components/app/main-background"
@@ -10,36 +11,68 @@ import { MainHeader } from "@/components/app/main-header"
 import { MainInputSection } from "@/components/app/main-input-section"
 
 export default function MainPage() {
-  const processEvents = useGenerateEvents()
+  const initiateEvents = useInitiateEventGeneration()
   const [events, setEvents] = useState<EventSimpleRo[]>([])
   const [processingSessionId, setProcessingSessionId] = useState<
     string | undefined
   >()
+  const [eventsFetched, setEventsFetched] = useState(false) // Flag to prevent repeated fetching
   const [eventDetails, setEventDetails] = useState(
     "I have a doctor appoitement eye checkup in Ksar hellal (i live there) at 4pm and its just 15 mins go and back using the car, tomorrow i need to have a coffee with my friend Ayoub Fanter in sayeda i will be using the scooter its just 15 mins transportation to his home to pick him up and then go to a café and then after the coffee i gotta put him home again and return to my house, and the next week on monday i have to work for 4 hours in Zero Plan project at home from 4pm, but before that i need to drink my coffee"
   )
 
+  // Manual event fetching function (no automatic polling)
+  const fetchEvents = async () => {
+    try {
+      const result = await orpc.events.listEvents.call({ page: 1, limit: 20 })
+      if (result.success && result.events) {
+        setEvents(result.events)
+        console.log("📋 Events loaded:", result.events.length)
+      }
+    } catch (error) {
+      console.error("Failed to fetch events:", error)
+    }
+  }
+
+  // Handler for when processing completes (called from MainProgressBar)
+  const handleProcessingComplete = () => {
+    if (!eventsFetched) {
+      console.log("🏁 Processing completed, fetching events...")
+      setEventsFetched(true)
+      fetchEvents()
+    }
+  }
+
   const handleSend = async () => {
     if (!eventDetails.trim()) return
 
+    // Clear previous state
+    setEvents([])
+    setProcessingSessionId(undefined)
+    setEventsFetched(false) // Reset the flag for new generation
+
     try {
-      const result = await processEvents.mutateAsync({
+      // Step 1: Initiate event generation and get session ID immediately
+      const result = await initiateEvents.mutateAsync({
         userInput: eventDetails.trim(),
       })
 
-      if (result.success) {
-        const sessionId = result.processingSession?.id
-        setProcessingSessionId(sessionId)
-        setEvents(result.events || [])
+      if (result.success && result.processingSessionId) {
+        console.log(
+          "🚀 Event generation initiated, session ID:",
+          result.processingSessionId
+        )
+        setProcessingSessionId(result.processingSessionId)
         setEventDetails("")
+
+        // Note: The actual AI processing happens in the background
+        // Progress will be tracked via the streaming progress hook
+        // Events will be available when the processing completes
       } else {
-        console.error("Failed to process events:", result.error)
+        console.error("Failed to initiate event generation:", result.error)
       }
     } catch (error) {
-      console.error("Error processing events:", error)
-    } finally {
-      // Clear processing session after completion
-      setTimeout(() => setProcessingSessionId(undefined), 1000)
+      console.error("Error initiating event generation:", error)
     }
   }
 
@@ -54,14 +87,15 @@ export default function MainPage() {
           eventDetails={eventDetails}
           setEventDetails={setEventDetails}
           onSend={handleSend}
-          isPending={processEvents.isPending}
+          isPending={initiateEvents.isPending}
         />
 
         <MainEventsSection
           events={events}
-          isLoading={processEvents.isPending}
+          isLoading={initiateEvents.isPending || !!processingSessionId}
           showLoadingCards={3}
           processingSessionId={processingSessionId}
+          onProcessingComplete={handleProcessingComplete}
         />
       </div>
     </div>

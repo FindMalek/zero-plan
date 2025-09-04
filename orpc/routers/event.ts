@@ -375,13 +375,16 @@ export const deleteEvent = privateProcedure
   })
 
 // List Events
-export const listEvents = privateProcedure
+export const listEvents = baseProcedure
   .input(listEventsDto)
   .output(listEventsRo)
   .handler(async ({ input, context }): Promise<ListEventsRo> => {
     try {
+      // Use fallback user ID for demo purposes (same pattern as AI router)
+      const userId = context.user?.id || "user_1"
+
       const where: any = {
-        userId: context.user.id,
+        userId: userId,
       }
 
       // Add filters

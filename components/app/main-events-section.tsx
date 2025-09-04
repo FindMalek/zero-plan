@@ -8,6 +8,7 @@ interface MainEventsSectionProps {
   isLoading?: boolean
   showLoadingCards?: number
   processingSessionId?: string
+  onProcessingComplete?: () => void
 }
 
 export function MainEventsSection({
@@ -15,6 +16,7 @@ export function MainEventsSection({
   isLoading = false,
   showLoadingCards = 2,
   processingSessionId,
+  onProcessingComplete,
 }: MainEventsSectionProps) {
   const shouldShowSection = events.length > 0 || isLoading
 
@@ -31,6 +33,7 @@ export function MainEventsSection({
       <MainProgressBar
         isVisible={isLoading}
         processingSessionId={processingSessionId}
+        onProcessingComplete={onProcessingComplete}
       />
 
       <div className="space-y-3">
