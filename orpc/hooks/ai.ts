@@ -18,26 +18,6 @@ export const aiKeys = {
     [...aiKeys.all, "progress", sessionId] as const,
 }
 
-// Generate Events Hook (legacy)
-export function useGenerateEvents() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (input: { userInput: string }) =>
-      orpc.ai.generateEvents.call(input),
-    onSuccess: (data: GenerateEventsRo) => {
-      if (data.success) {
-        queryClient.invalidateQueries({
-          queryKey: eventKeys.lists(),
-        })
-      }
-    },
-    onError: (error) => {
-      console.error("Failed to generate events with AI:", error)
-    },
-  })
-}
-
 // Initiate Event Generation Hook (for real-time progress tracking)
 export function useInitiateEventGeneration() {
   const queryClient = useQueryClient()
