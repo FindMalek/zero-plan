@@ -16,41 +16,31 @@ CONTEXT:
 - Calendar: "${calendarName}" 
 - USER INPUT: "${userInput}"
 
-🧠 MASTER PLANNING WORKFLOW WITH PROGRESS TRACKING:
+🧠 OPTIMIZED PLANNING WORKFLOW (6 STEPS MAX):
 
-STEP 1: ANALYZE USER INTENT (20% - REQUIRED FIRST STEP)
-Use analyzeUserIntent tool with current datetime to understand:
-- What activities the user really wants to do
-- How complex their request is 
-- What locations and timing are involved
-- The complete scope of their needs
-Progress: "🧠 Analyzing your request and understanding intent..."
+⚠️ IMPORTANT: Use each tool ONLY ONCE. Do not repeat tool calls.
 
-STEP 2: GET TIME CONTEXT (40%)
-Use getCurrentTimeInfo tool for accurate datetime context
-Progress: "⏰ Getting current time and scheduling context..."
+STEP 1: ANALYZE USER INTENT (20%)
+Call analyzeUserIntent tool ONCE to understand the complete request.
 
-STEP 3: PLAN EVENT STRUCTURE (35% - REQUIRED AFTER STEP 1) 
-Use planEventStructure tool with the intent analysis to:
-- Create detailed event breakdown and timing
-- Account for travel, preparation, and logistics
-- Coordinate multiple activities if needed
-- Optimize the complete event flow
-Progress: "📋 Planning optimal event structure and flow..."
+STEP 2: GET TIME CONTEXT (30%) 
+Call getCurrentTimeInfo tool ONCE for current datetime.
 
-STEP 4: GENERATE INDIVIDUAL EVENTS (50-80%)
-For each structured event from Step 3:
-- Use selectEventEmoji for appropriate emoji (50%)
-- Use calculateEventTiming for optimal scheduling (55%)
-- Use planTravelEvents for travel logistics (60%)
-- Use generateEventDescription for rich, contextual content (70%)
-- Use formatTravelEvent for travel events when needed
+STEP 3: PLAN EVENT STRUCTURE (40%)
+Call planEventStructure tool ONCE with the intent analysis.
 
-Progress tracking:
-- "😊 Selecting perfect emojis for your events..." (50%)
-- "⌚ Calculating optimal timing and durations..." (55%)
-- "🚗 Planning travel routes and logistics..." (60%)
-- "✍️ Crafting detailed event descriptions with AI..." (70%)
+STEP 4: GENERATE EVENT DETAILS (60%)
+Call ONE of these tools based on the event type:
+- selectEventEmoji for emoji selection
+- calculateEventTiming for timing
+- planTravelEvents for travel logistics  
+- generateEventDescription for descriptions
+
+STEP 5: FINALIZE EVENTS (80%)
+Call generateEventSequence tool ONCE to create the final event structure.
+
+STEP 6: COMPLETE (100%)
+Provide final summary without additional tool calls.
 
 🎯 INTELLIGENT EVENT CREATION STRATEGY:
 
@@ -83,28 +73,15 @@ Progress tracking:
 - Use local knowledge (Tunisian cities/culture)
 - Provide rich, actionable event descriptions
 
-STEP 5: FINALIZE EVENT SEQUENCE (80-95%)
-- Use generateEventSequence to build comprehensive event chains (80%)
-- Apply final formatting and quality checks (90%)
-- Complete personalized event plan (95%)
+🚀 EXECUTION PRIORITY: 
+1. Start with analyzeUserIntent tool (ONCE)
+2. Get time context with getCurrentTimeInfo (ONCE)  
+3. Plan structure with planEventStructure (ONCE)
+4. Generate details with ONE appropriate tool
+5. Finalize with generateEventSequence (ONCE)
+6. Complete without additional tools
 
-Progress tracking:
-- "🔗 Building comprehensive event sequences..." (80%)
-- "🎯 Finalizing events with perfect details..." (90%)
-- "✨ Completing your personalized event plan..." (95%)
-
-STEP 6: FINAL ANALYSIS AND SUMMARY
-After using all necessary tools, provide a comprehensive summary of your planning work:
-
-- Summarize your intent analysis findings
-- List all events you've planned and their key details
-- Describe the travel logistics and timing coordination
-- Explain any cultural considerations applied
-- Note the confidence level in your planning
-
-Focus on thorough tool usage rather than structured output - the system will capture all tool results and generate the final structured events separately.
-
-🚀 EXECUTION PRIORITY: Always start with analyzeUserIntent and planEventStructure tools for intelligent, comprehensive event planning that serves the user's real needs.`
+Focus on efficient, single-use tool execution for optimal performance.`
 
 export const createStructuredOutputPrompt = (
   userInput: string,

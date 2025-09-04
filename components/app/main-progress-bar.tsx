@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useStreamingProgress } from "@/orpc/hooks"
 
 import { Progress } from "@/components/ui/progress"
@@ -7,17 +8,26 @@ import { Progress } from "@/components/ui/progress"
 interface MainProgressBarProps {
   isVisible: boolean
   processingSessionId?: string
+  onProcessingComplete?: () => void
 }
 
 export function MainProgressBar({
   isVisible,
   processingSessionId,
+  onProcessingComplete,
 }: MainProgressBarProps) {
   const {
     data: progressData,
     isLoading,
     error,
   } = useStreamingProgress(processingSessionId || null, isVisible)
+
+  // Watch for completion and trigger callback
+  useEffect(() => {
+    if (progressData?.status === "COMPLETED" && onProcessingComplete) {
+      onProcessingComplete()
+    }
+  }, [progressData?.status, onProcessingComplete])
 
   // Optional debug logging for development
   // Removed to reduce console noise

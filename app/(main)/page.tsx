@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { orpc } from "@/orpc/client"
 import { useInitiateEventGeneration } from "@/orpc/hooks"
 import { EventSimpleRo } from "@/schemas"
 
@@ -15,9 +16,32 @@ export default function MainPage() {
   const [processingSessionId, setProcessingSessionId] = useState<
     string | undefined
   >()
+  const [eventsFetched, setEventsFetched] = useState(false) // Flag to prevent repeated fetching
   const [eventDetails, setEventDetails] = useState(
     "I have a doctor appoitement eye checkup in Ksar hellal (i live there) at 4pm and its just 15 mins go and back using the car, tomorrow i need to have a coffee with my friend Ayoub Fanter in sayeda i will be using the scooter its just 15 mins transportation to his home to pick him up and then go to a café and then after the coffee i gotta put him home again and return to my house, and the next week on monday i have to work for 4 hours in Zero Plan project at home from 4pm, but before that i need to drink my coffee"
   )
+
+  // Manual event fetching function (no automatic polling)
+  const fetchEvents = async () => {
+    try {
+      const result = await orpc.events.listEvents.call({ page: 1, limit: 20 })
+      if (result.success && result.events) {
+        setEvents(result.events)
+        console.log("📋 Events loaded:", result.events.length)
+      }
+    } catch (error) {
+      console.error("Failed to fetch events:", error)
+    }
+  }
+
+  // Handler for when processing completes (called from MainProgressBar)
+  const handleProcessingComplete = () => {
+    if (!eventsFetched) {
+      console.log("🏁 Processing completed, fetching events...")
+      setEventsFetched(true)
+      fetchEvents()
+    }
+  }
 
   const handleSend = async () => {
     if (!eventDetails.trim()) return
@@ -25,6 +49,7 @@ export default function MainPage() {
     // Clear previous state
     setEvents([])
     setProcessingSessionId(undefined)
+    setEventsFetched(false) // Reset the flag for new generation
 
     try {
       // Step 1: Initiate event generation and get session ID immediately
@@ -70,6 +95,7 @@ export default function MainPage() {
           isLoading={initiateEvents.isPending || !!processingSessionId}
           showLoadingCards={3}
           processingSessionId={processingSessionId}
+          onProcessingComplete={handleProcessingComplete}
         />
       </div>
     </div>
